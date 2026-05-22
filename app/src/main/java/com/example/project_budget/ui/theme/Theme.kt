@@ -1,54 +1,59 @@
 package com.example.project_budget.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = AriesLightOrange,
+    onPrimary = AriesText,
+    primaryContainer = AriesOrange,
+    onPrimaryContainer = AriesDarkText,
+    secondary = AriesLightRed,
+    onSecondary = AriesText,
+    secondaryContainer = AriesRed,
+    onSecondaryContainer = AriesDarkText,
+    tertiary = AriesLightYellow,
+    onTertiary = AriesText,
+    background = AriesDarkBackground,
+    onBackground = AriesDarkText,
+    surface = AriesDarkSurface,
+    onSurface = AriesDarkText,
+    error = AriesLightRed,
+    onError = AriesText
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = AriesOrange,
+    onPrimary = AriesSurface,
+    primaryContainer = AriesLightOrange,
+    onPrimaryContainer = AriesText,
+    secondary = AriesRed,
+    onSecondary = AriesSurface,
+    secondaryContainer = AriesLightRed,
+    onSecondaryContainer = AriesText,
+    tertiary = AriesYellow,
+    onTertiary = AriesText,
+    tertiaryContainer = AriesLightYellow,
+    onTertiaryContainer = AriesText,
+    background = AriesCream,
+    onBackground = AriesText,
+    surface = AriesSurface,
+    onSurface = AriesText,
+    surfaceVariant = AriesLightOrange,
+    onSurfaceVariant = AriesMutedText,
+    error = AriesError,
+    onError = AriesSurface
 )
 
 @Composable
 fun Project_BudgetTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
