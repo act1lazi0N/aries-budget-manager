@@ -1,4 +1,6 @@
 package com.example.project_budget.model
 
-class TransactionType {
+enum class TransactionType(val displayName: String) {
+    INCOME("Thu nhập"),
+    EXPENSE("Chi tiêu")
 }

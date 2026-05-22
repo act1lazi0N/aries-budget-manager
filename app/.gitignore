@@ -5,3 +5,15 @@ local.properties
 .idea/
 *.iml
 .DS_Store
+
+# Folder
+.idea
+.codex
+AGENT.md
+.codex/
+.cursor/
+.windsurf/
+.claude/
+.roo/
+.gemini/
+.ai/
