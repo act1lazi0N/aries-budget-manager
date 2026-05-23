@@ -81,10 +81,8 @@ class BudgetViewModel(
         val totalExpense = transactions
             .filter { it.type == TransactionType.EXPENSE }
             .sumOf { it.amount }
-        val expenseByCategory = transactions
-            .filter { it.type == TransactionType.EXPENSE }
-            .groupBy { it.category }
-            .mapValues { entry -> entry.value.sumOf { it.amount } }
+        val categoryTotals = calculateCategoryTotals(transactions)
+        val expenseByCategory = calculateExpenseByCategory(transactions)
         val categoryPercentages = calculateCategoryPercentages(expenseByCategory, totalExpense)
         val budgets = repository.getBudgets()
         val overBudgetCategories = findOverBudgetCategories(expenseByCategory, budgets)
@@ -98,9 +96,14 @@ class BudgetViewModel(
             totalIncome = totalIncome,
             totalExpense = totalExpense,
             balance = totalIncome - totalExpense,
-            averageAmount = if (transactions.isEmpty()) 0.0 else transactions.sumOf { it.amount } / transactions.size,
+            averageAmount = if (transactions.isEmpty()) {
+                0.0
+            } else {
+                transactions.sumOf { it.amount } / transactions.size
+            },
             maxTransaction = transactions.maxByOrNull { it.amount },
             minTransaction = transactions.minByOrNull { it.amount },
+            categoryTotals = categoryTotals,
             categoryStats = expenseByCategory,
             expenseByCategory = expenseByCategory,
             categoryPercentages = categoryPercentages,
@@ -108,6 +111,19 @@ class BudgetViewModel(
             overBudgetWarnings = buildOverBudgetWarnings(expenseByCategory, budgets),
             errorMessage = message
         )
+    }
+
+    private fun calculateCategoryTotals(transactions: List<Transaction>): Map<String, Double> {
+        return transactions
+            .groupBy { it.category }
+            .mapValues { entry -> entry.value.sumOf { it.amount } }
+    }
+
+    private fun calculateExpenseByCategory(transactions: List<Transaction>): Map<String, Double> {
+        return transactions
+            .filter { it.type == TransactionType.EXPENSE }
+            .groupBy { it.category }
+            .mapValues { entry -> entry.value.sumOf { it.amount } }
     }
 
     private fun calculateCategoryPercentages(

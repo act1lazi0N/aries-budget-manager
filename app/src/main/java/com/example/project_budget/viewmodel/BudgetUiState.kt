@@ -17,6 +17,7 @@ data class BudgetUiState(
     val averageAmount: Double = 0.0,
     val maxTransaction: Transaction? = null,
     val minTransaction: Transaction? = null,
+    val categoryTotals: Map<String, Double> = emptyMap(),
     val categoryStats: Map<String, Double> = emptyMap(),
     val expenseByCategory: Map<String, Double> = emptyMap(),
     val categoryPercentages: Map<String, Double> = emptyMap(),
