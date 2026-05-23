@@ -1,12 +1,12 @@
 package com.example.project_budget.ui.screen.transaction
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
@@ -56,7 +56,7 @@ fun TransactionListScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text(text = "Giao dịch") }
+                title = { Text(text = "Giao dich") }
             )
         },
         floatingActionButton = {
@@ -65,42 +65,39 @@ fun TransactionListScreen(
             }
         }
     ) { innerPadding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CategoryChip(
-                        text = "Tất cả",
-                        selected = selectedFilter == TransactionFilter.ALL,
-                        onClick = { selectedFilter = TransactionFilter.ALL }
-                    )
-                    CategoryChip(
-                        text = "Thu",
-                        selected = selectedFilter == TransactionFilter.INCOME,
-                        onClick = { selectedFilter = TransactionFilter.INCOME }
-                    )
-                    CategoryChip(
-                        text = "Chi",
-                        selected = selectedFilter == TransactionFilter.EXPENSE,
-                        onClick = { selectedFilter = TransactionFilter.EXPENSE }
-                    )
-                }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                CategoryChip(
+                    text = "Tat ca",
+                    selected = selectedFilter == TransactionFilter.ALL,
+                    onClick = { selectedFilter = TransactionFilter.ALL }
+                )
+                CategoryChip(
+                    text = "Thu",
+                    selected = selectedFilter == TransactionFilter.INCOME,
+                    onClick = { selectedFilter = TransactionFilter.INCOME }
+                )
+                CategoryChip(
+                    text = "Chi",
+                    selected = selectedFilter == TransactionFilter.EXPENSE,
+                    onClick = { selectedFilter = TransactionFilter.EXPENSE }
+                )
             }
 
             if (visibleTransactions.isEmpty()) {
-                item {
-                    EmptyState(
-                        title = "Không có giao dịch",
-                        message = "Thay đổi bộ lọc hoặc thêm giao dịch mới."
-                    )
-                }
+                EmptyState(
+                    title = "Khong co giao dich",
+                    message = "Thay doi bo loc hoac them giao dich moi."
+                )
             } else {
-                items(visibleTransactions, key = { it.id }) { transaction ->
+                visibleTransactions.forEach { transaction ->
                     TransactionItem(
                         transaction = transaction,
                         onClick = { onTransactionClick(transaction.id) },
@@ -121,17 +118,17 @@ private fun TransactionListScreenPreview() {
                 transactions = listOf(
                     Transaction(
                         id = 1,
-                        title = "Lương tháng",
+                        title = "Luong thang",
                         amount = 8_000_000.0,
-                        category = "Lương",
+                        category = "Luong",
                         type = TransactionType.INCOME,
                         date = "2026-05-01"
                     ),
                     Transaction(
                         id = 2,
-                        title = "Ăn trưa",
+                        title = "An trua",
                         amount = 55_000.0,
-                        category = "Ăn uống",
+                        category = "An uong",
                         type = TransactionType.EXPENSE,
                         date = "2026-05-02"
                     )
