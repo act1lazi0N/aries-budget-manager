@@ -27,12 +27,13 @@ fun BalanceCard(
             modifier = Modifier.padding(20.dp)
         ) {
 
-            Text("Số dư hiện tại")
+            Text("Số dư hiện tại", color = MaterialTheme.colorScheme.onSurface)
 
             Text(
                 text = "${formatCurrency(balance)} ₫",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(Modifier.height(16.dp))
@@ -44,16 +45,16 @@ fun BalanceCard(
             ) {
 
                 Column {
-                    Text("Thu nhập")
+                    Text("Thu nhập", color = MaterialTheme.colorScheme.onSurface)
                     Text(
                         "+${formatCurrency(income)} ₫",
                         color = MaterialTheme.colorScheme.onSecondary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 }
 
                 Column {
-                    Text("Chi tiêu")
+                    Text("Chi tiêu", color = MaterialTheme.colorScheme.onSurface)
                     Text(
                         "-${formatCurrency(expense)} ₫",
                         color = MaterialTheme.colorScheme.secondary,
