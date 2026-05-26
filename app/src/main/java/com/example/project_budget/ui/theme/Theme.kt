@@ -16,6 +16,7 @@ private val LightColorScheme = lightColorScheme(
     onBackground = TextDark,
     onSurface = TextDark,
     onSecondary = GreenPrimary,
+
 )
 @Composable
 fun Project_BudgetTheme(
