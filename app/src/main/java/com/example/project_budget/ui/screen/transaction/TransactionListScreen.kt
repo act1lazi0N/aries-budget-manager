@@ -28,7 +28,6 @@ import com.example.project_budget.ui.navigation.Screen
 @Composable
 fun TransactionListScreen(
     transactions: List<Transaction>,
-    onBackClick: () -> Unit,
     onAddTransactionClick: () -> Unit,
     onTransactionClick: (Int) -> Unit,
     onDeleteClick: (Int) -> Unit,

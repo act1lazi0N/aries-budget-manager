@@ -49,7 +49,7 @@ fun BalanceCard(
                     Text(
                         "+${formatCurrency(income)} ₫",
                         color = MaterialTheme.colorScheme.onSecondary,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 

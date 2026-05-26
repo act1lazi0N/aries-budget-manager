@@ -10,3 +10,4 @@ val CreamBackground = Color(0xFFFFF8F4)
 val CardWhite = Color(0xFFFFFFFF)
 val TextDark = Color(0xFF000000)
 val GreenPrimary = Color(0xFF139F13)
+

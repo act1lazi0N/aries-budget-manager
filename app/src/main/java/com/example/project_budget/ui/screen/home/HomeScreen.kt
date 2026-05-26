@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.project_budget.model.Transaction
@@ -90,7 +89,7 @@ fun HomeScreen(
             }
         }
     ) { padding ->
-        // NHIỆM VỤ: Dùng LazyColumn để hiển thị nội dung và danh sách giao dịch
+        //NHIỆM VỤ: Dùng LazyColumn để hiển thị nội dung và danh sách giao dịch
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()

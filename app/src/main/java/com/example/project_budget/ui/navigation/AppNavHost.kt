@@ -2,11 +2,14 @@ package com.example.project_budget.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.project_budget.data.TransactionRepository
 import com.example.project_budget.ui.screen.home.HomeScreen
+import com.example.project_budget.ui.screen.transaction.AddEditTransactionScreen
 import com.example.project_budget.ui.screen.transaction.TransactionListScreen
 
 @Composable
@@ -39,9 +42,6 @@ fun AppNavHost() {
         composable(Screen.Transactions.route) {
             TransactionListScreen(
                 transactions = repository.getAllTransactions(),
-                onBackClick = {
-                    navController.popBackStack()
-                },
                 onAddTransactionClick = {
                     navController.navigate(Screen.AddTransaction.route)
                 },
@@ -56,24 +56,22 @@ fun AppNavHost() {
         }
 
         composable(Screen.AddTransaction.route) {
-            TransactionListScreen(
-                transactions = repository.getAllTransactions(),
-                onBackClick = { navController.popBackStack() },
-                onAddTransactionClick = { },
-                onTransactionClick = { },
-                onDeleteClick = { },
-                onBottomNavClick = { route -> navController.navigate(route) }
+            AddEditTransactionScreen(
+                navController = navController,
+                repository = repository,
+                transactionId = null
             )
         }
 
-        composable(Screen.EditTransaction.route) {
-            TransactionListScreen(
-                transactions = repository.getAllTransactions(),
-                onBackClick = { navController.popBackStack() },
-                onAddTransactionClick = { },
-                onTransactionClick = { },
-                onDeleteClick = { },
-                onBottomNavClick = { route -> navController.navigate(route) }
+        composable(
+            route = Screen.EditTransaction.route,
+            arguments = listOf(navArgument("transactionId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val transactionId = backStackEntry.arguments?.getInt("transactionId")
+            AddEditTransactionScreen(
+                navController = navController,
+                repository = repository,
+                transactionId = transactionId
             )
         }
     }

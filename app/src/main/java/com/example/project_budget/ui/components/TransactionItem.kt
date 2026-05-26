@@ -34,7 +34,7 @@ fun TransactionItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Cột bên trái: Tiêu đề và Danh mục/Ngày
+            // Cột bên trái: Tiêu đề và danh mục/Ngày
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = transaction.title,
