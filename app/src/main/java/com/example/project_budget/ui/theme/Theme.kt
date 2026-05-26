@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 
 private val LightColorScheme = lightColorScheme(
 
-    primary = GreenPrimary,
+    primary = OrangePrimary,
     primaryContainer = OrangeLight,
     secondary = RedPrimary,
     tertiary = YellowPrimary,
@@ -15,7 +15,6 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = CardWhite,
     onBackground = TextDark,
     onSurface = TextDark,
-    onSecondary = OrangePrimary
 )
 @Composable
 fun Project_BudgetTheme(

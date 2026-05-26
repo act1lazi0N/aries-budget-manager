@@ -12,10 +12,7 @@ import com.example.project_budget.ui.screen.transaction.TransactionListScreen
 @Composable
 fun AppNavHost() {
     val navController = rememberNavController()
-
-    val repository = remember {
-        TransactionRepository()
-    }
+    val repository = remember { TransactionRepository() }
 
     NavHost(
         navController = navController,
@@ -45,8 +42,8 @@ fun AppNavHost() {
                 onAddTransactionClick = {
                     navController.navigate(Screen.AddTransaction.route)
                 },
-                onTransactionClick = { transactionId ->
-                    navController.navigate("edit_transaction/$transactionId")
+                onTransactionClick = { id ->
+                    navController.navigate("edit_transaction/$id")
                 },
                 onDeleteClick = { },
                 onBottomNavClick = { route ->
@@ -58,75 +55,22 @@ fun AppNavHost() {
         composable(Screen.AddTransaction.route) {
             TransactionListScreen(
                 transactions = repository.getAllTransactions(),
-                onBackClick = {
-                    navController.popBackStack()
-                },
+                onBackClick = { navController.popBackStack() },
                 onAddTransactionClick = { },
                 onTransactionClick = { },
                 onDeleteClick = { },
-                onBottomNavClick = { route ->
-                    navController.navigate(route)
-                }
+                onBottomNavClick = { route -> navController.navigate(route) }
             )
         }
 
         composable(Screen.EditTransaction.route) {
             TransactionListScreen(
                 transactions = repository.getAllTransactions(),
-                onBackClick = {
-                    navController.popBackStack()
-                },
+                onBackClick = { navController.popBackStack() },
                 onAddTransactionClick = { },
                 onTransactionClick = { },
                 onDeleteClick = { },
-                onBottomNavClick = { route ->
-                    navController.navigate(route)
-                }
-            )
-        }
-
-        composable(Screen.Statistics.route) {
-            HomeScreen(
-                transactions = repository.getAllTransactions(),
-                onAddTransactionClick = {
-                    navController.navigate(Screen.AddTransaction.route)
-                },
-                onViewAllTransactionsClick = {
-                    navController.navigate(Screen.Transactions.route)
-                },
-                onBottomNavClick = { route ->
-                    navController.navigate(route)
-                }
-            )
-        }
-
-        composable(Screen.Settings.route) {
-            HomeScreen(
-                transactions = repository.getAllTransactions(),
-                onAddTransactionClick = {
-                    navController.navigate(Screen.AddTransaction.route)
-                },
-                onViewAllTransactionsClick = {
-                    navController.navigate(Screen.Transactions.route)
-                },
-                onBottomNavClick = { route ->
-                    navController.navigate(route)
-                }
-            )
-        }
-
-        composable(Screen.About.route) {
-            HomeScreen(
-                transactions = repository.getAllTransactions(),
-                onAddTransactionClick = {
-                    navController.navigate(Screen.AddTransaction.route)
-                },
-                onViewAllTransactionsClick = {
-                    navController.navigate(Screen.Transactions.route)
-                },
-                onBottomNavClick = { route ->
-                    navController.navigate(route)
-                }
+                onBottomNavClick = { route -> navController.navigate(route) }
             )
         }
     }
