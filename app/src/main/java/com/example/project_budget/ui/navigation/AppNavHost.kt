@@ -25,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.project_budget.ui.components.AppBottomBar
 import com.example.project_budget.ui.screen.home.HomeScreen
+import com.example.project_budget.ui.screen.transaction.AddEditTransactionScreen
 import com.example.project_budget.ui.screen.transaction.TransactionListScreen
 import com.example.project_budget.viewmodel.BudgetViewModel
 
@@ -90,11 +91,14 @@ fun AppNavHost(
             }
 
             composable(Screen.AddTransaction.route) {
-                PlaceholderScreen(
-                    title = "Thêm giao dịch",
-                    actionText = "Quay lại",
-                    paddingValues = PaddingValues(),
-                    onActionClick = { navController.popBackStack() }
+                AddEditTransactionScreen(
+                    categories = uiState.categories,
+                    wallets = uiState.wallets,
+                    onSaveClick = { transaction ->
+                        viewModel.addTransaction(transaction)
+                        navController.popBackStack()
+                    },
+                    onBackClick = { navController.popBackStack() }
                 )
             }
 
@@ -103,12 +107,27 @@ fun AppNavHost(
                 arguments = listOf(navArgument("transactionId") { type = NavType.IntType })
             ) { entry ->
                 val transactionId = entry.arguments?.getInt("transactionId") ?: 0
-                PlaceholderScreen(
-                    title = "Sửa giao dịch #$transactionId",
-                    actionText = "Quay lại",
-                    paddingValues = PaddingValues(),
-                    onActionClick = { navController.popBackStack() }
-                )
+                val transaction = viewModel.getTransactionById(transactionId)
+
+                if (transaction == null) {
+                    PlaceholderScreen(
+                        title = "Không tìm thấy giao dịch #$transactionId",
+                        actionText = "Quay lại",
+                        paddingValues = PaddingValues(),
+                        onActionClick = { navController.popBackStack() }
+                    )
+                } else {
+                    AddEditTransactionScreen(
+                        categories = uiState.categories,
+                        wallets = uiState.wallets,
+                        transaction = transaction,
+                        onSaveClick = { updatedTransaction ->
+                            viewModel.updateTransaction(updatedTransaction)
+                            navController.popBackStack()
+                        },
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
             }
 
             composable(Screen.Statistics.route) {

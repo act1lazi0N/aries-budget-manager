@@ -1,52 +1,80 @@
 package com.example.project_budget.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.project_budget.data.TransactionRepository
+import com.example.project_budget.data.local.AppDatabase
 import com.example.project_budget.model.Budget
 import com.example.project_budget.model.Transaction
 import com.example.project_budget.model.TransactionType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class BudgetViewModel(
-    private val repository: TransactionRepository = TransactionRepository()
-) : ViewModel() {
-    private val _uiState = MutableStateFlow(createUiState())
+    application: Application
+) : AndroidViewModel(application) {
+    private val repository = TransactionRepository(
+        transactionDao = AppDatabase.getInstance(application).transactionDao()
+    )
+    private val _uiState = MutableStateFlow(
+        BudgetUiState(
+            categories = repository.getCategories(),
+            wallets = repository.getWallets(),
+            budgets = repository.getBudgets()
+        )
+    )
     val uiState: StateFlow<BudgetUiState> = _uiState.asStateFlow()
 
+    init {
+        refreshState()
+    }
+
     fun addTransaction(transaction: Transaction) {
-        repository.addTransaction(transaction)
-        refreshState(message = "Đã thêm giao dịch.")
+        viewModelScope.launch {
+            repository.addTransaction(transaction)
+            _uiState.value = createUiState(message = "Đã thêm giao dịch.")
+        }
     }
 
     fun updateTransaction(transaction: Transaction) {
-        val updated = repository.updateTransaction(transaction)
-        refreshState(
-            message = if (updated) {
-                "Đã cập nhật giao dịch."
-            } else {
-                "Không tìm thấy giao dịch cần cập nhật."
-            }
-        )
+        viewModelScope.launch {
+            val updated = repository.updateTransaction(transaction)
+            _uiState.value = createUiState(
+                message = if (updated) {
+                    "Đã cập nhật giao dịch."
+                } else {
+                    "Không tìm thấy giao dịch cần cập nhật."
+                }
+            )
+        }
     }
 
     fun deleteTransaction(transactionId: Int) {
-        val deleted = repository.deleteTransaction(transactionId)
-        refreshState(
-            message = if (deleted) {
-                "Đã xóa giao dịch."
-            } else {
-                "Không tìm thấy giao dịch cần xóa."
-            }
-        )
+        viewModelScope.launch {
+            val deleted = repository.deleteTransaction(transactionId)
+            _uiState.value = createUiState(
+                message = if (deleted) {
+                    "Đã xóa giao dịch."
+                } else {
+                    "Không tìm thấy giao dịch cần xóa."
+                }
+            )
+        }
     }
 
     fun getTransactionById(transactionId: Int): Transaction? {
-        return repository.getTransactionById(transactionId)
+        return _uiState.value.transactions.firstOrNull { it.id == transactionId }
     }
 
-    fun validateTransaction(title: String, amountText: String, category: String): String? {
+    fun validateTransaction(
+        title: String,
+        amountText: String,
+        category: String,
+        note: String = ""
+    ): String? {
         if (title.isBlank()) {
             return "Vui lòng nhập tên giao dịch."
         }
@@ -62,6 +90,10 @@ class BudgetViewModel(
             return "Vui lòng chọn danh mục."
         }
 
+        if (note.length > 200) {
+            return "Ghi chú không được vượt quá 200 ký tự."
+        }
+
         return null
     }
 
@@ -70,10 +102,12 @@ class BudgetViewModel(
     }
 
     private fun refreshState(message: String? = null) {
-        _uiState.value = createUiState(message)
+        viewModelScope.launch {
+            _uiState.value = createUiState(message)
+        }
     }
 
-    private fun createUiState(message: String? = null): BudgetUiState {
+    private suspend fun createUiState(message: String? = null): BudgetUiState {
         val transactions = repository.getAllTransactions()
         val totalIncome = transactions
             .filter { it.type == TransactionType.INCOME }
@@ -98,7 +132,11 @@ class BudgetViewModel(
             totalIncome = totalIncome,
             totalExpense = totalExpense,
             balance = totalIncome - totalExpense,
-            averageAmount = if (transactions.isEmpty()) 0.0 else transactions.sumOf { it.amount } / transactions.size,
+            averageAmount = if (transactions.isEmpty()) {
+                0.0
+            } else {
+                transactions.sumOf { it.amount } / transactions.size
+            },
             maxTransaction = transactions.maxByOrNull { it.amount },
             minTransaction = transactions.minByOrNull { it.amount },
             categoryStats = expenseByCategory,
