@@ -64,8 +64,8 @@ fun AboutScreen(
                 value = "Kotlin, Jetpack Compose, Material 3, Navigation Compose, ViewModel và Room"
             )
             StatCard(
-                title = "Nhóm",
-                value = "Person 4 phụ trách Statistics, Settings, About và QA evidence"
+                title = "Thực hiện",
+                value = "Nhóm 6 - Ứng dựng quản lý tài chính"
             )
             OutlinedButton(
                 onClick = onBackClick,
