@@ -31,11 +31,13 @@ fun HomeScreen(
     val expense = transactions.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
     val balance = income - expense
 
-    val topExpenseCategory = transactions
+    val topExpenseEntry = transactions
         .filter { it.type == TransactionType.EXPENSE }
         .groupBy { it.category }
         .maxByOrNull { it.value.sumOf { t -> t.amount } }
-        ?.key ?: "Chưa có dữ liệu"
+
+    val topExpenseCategory = topExpenseEntry?.key ?: "Chưa có dữ liệu"
+    val topExpenseAmount = topExpenseEntry?.value?.sumOf { it.amount } ?: 0.0
 
     val foodExpense = transactions
         .filter { it.type == TransactionType.EXPENSE && it.category == "Ăn uống" }
@@ -61,7 +63,7 @@ fun HomeScreen(
                     selected = true,
                     onClick = {},
                     icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                    label = { Text("Home") }
+                    label = { Text("Trang chủ") }
                 )
                 NavigationBarItem(
                     selected = false,
@@ -103,8 +105,8 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
-                        Text("Số dư hiện tại", fontWeight = FontWeight.Bold)
-                        Text("${formatMoney(balance)} đ", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                        Text("Số dư hiện tại", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        Text("${formatMoney(balance)} ₫", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
 
                         Spacer(modifier = Modifier.height(16.dp))
 
@@ -113,13 +115,13 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column {
-                                Text("Thu nhập", fontWeight = FontWeight.Normal)
-                                Text("+${formatMoney(income)} đ", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                                Text("Thu nhập", fontWeight = FontWeight.Normal, color = MaterialTheme.colorScheme.onSurface)
+                                Text("+${formatMoney(income)} ₫", color = MaterialTheme.colorScheme.onSecondary, fontWeight = FontWeight.Bold)
                             }
 
                             Column {
-                                Text("Chi tiêu", fontWeight = FontWeight.Normal)
-                                Text("-${formatMoney(expense)} đ", color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
+                                Text("Chi tiêu", fontWeight = FontWeight.Normal, color = MaterialTheme.colorScheme.onSurface)
+                                Text("-${formatMoney(expense)} ₫", color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -134,7 +136,7 @@ fun HomeScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text("Chi tháng này")
-                            Text("${formatMoney(expense)} đ", color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
+                            Text("${formatMoney(expense)} ₫", color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -154,7 +156,11 @@ fun HomeScreen(
                 Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text("Danh mục chi nhiều nhất")
-                        Text(topExpenseCategory, color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = if (topExpenseEntry != null) "$topExpenseCategory - ${formatMoney(topExpenseAmount)} ₫" else topExpenseCategory,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
 
@@ -175,7 +181,7 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Ăn uống", fontWeight = FontWeight.Bold)
-                            Text("${formatMoney(foodExpense)} / ${formatMoney(foodBudget)} đ")
+                            Text("${formatMoney(foodExpense)} / ${formatMoney(foodBudget)} ₫")
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -224,11 +230,11 @@ fun HomeScreen(
 
                         Text(
                             text = if (item.type == TransactionType.INCOME)
-                                "+${formatMoney(item.amount)} đ"
+                                "+${formatMoney(item.amount)} ₫"
                             else
-                                "-${formatMoney(item.amount)} đ",
+                                "-${formatMoney(item.amount)} ₫",
                             color = if (item.type == TransactionType.INCOME)
-                                MaterialTheme.colorScheme.primary
+                                MaterialTheme.colorScheme.onSecondary
                             else
                                 MaterialTheme.colorScheme.secondary,
                             fontWeight = FontWeight.Bold

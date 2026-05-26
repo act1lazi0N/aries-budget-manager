@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
@@ -45,7 +47,7 @@ fun TransactionListScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddTransactionClick,
-                containerColor = MaterialTheme.colorScheme.onSecondary,
+                containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
             ) {
@@ -143,19 +145,27 @@ fun TransactionListScreen(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(44.dp)
+                                .size(48.dp)
                                 .background(
-                                    color = if (item.type == TransactionType.INCOME)
-                                        MaterialTheme.colorScheme.primaryContainer
+                                    color = (if (item.type == TransactionType.INCOME)
+                                        MaterialTheme.colorScheme.onSecondary
                                     else
-                                        MaterialTheme.colorScheme.secondaryContainer,
-                                    shape = CircleShape
+                                        MaterialTheme.colorScheme.secondary).copy(alpha = 0.15f),
+                                    shape = RoundedCornerShape(12.dp)
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = if (item.type == TransactionType.INCOME) "↑" else "↓",
-                                fontWeight = FontWeight.Bold
+                            Icon(
+                                imageVector = if (item.type == TransactionType.INCOME)
+                                    Icons.Default.ArrowUpward
+                                else
+                                    Icons.Default.ArrowDownward,
+                                contentDescription = null,
+                                tint = if (item.type == TransactionType.INCOME)
+                                    MaterialTheme.colorScheme.onSecondary
+                                else
+                                    MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
 
@@ -169,11 +179,11 @@ fun TransactionListScreen(
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
                                 text = if (item.type == TransactionType.INCOME)
-                                    "+${formatMoney(item.amount)} đ"
+                                    "+${formatMoney(item.amount)} ₫"
                                 else
-                                    "-${formatMoney(item.amount)} đ",
+                                    "-${formatMoney(item.amount)} ₫",
                                 color = if (item.type == TransactionType.INCOME)
-                                    MaterialTheme.colorScheme.primary
+                                    MaterialTheme.colorScheme.onSecondary
                                 else
                                     MaterialTheme.colorScheme.secondary,
                                 fontWeight = FontWeight.Bold
@@ -194,7 +204,10 @@ fun TransactionListScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
-                    shape = RoundedCornerShape(18.dp)
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 ) {
                     Column(
                         modifier = Modifier.fillMaxWidth().padding(24.dp),
