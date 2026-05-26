@@ -12,13 +12,14 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun StatCard(
     title: String,
-    value: String
+    value: String,
+    valueColor: Color = MaterialTheme.colorScheme.primary
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -34,7 +35,7 @@ fun StatCard(
                 text = value,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary
+                color = valueColor
             )
         }
     }

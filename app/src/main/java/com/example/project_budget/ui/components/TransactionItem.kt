@@ -17,14 +17,12 @@ import com.example.project_budget.utils.formatCurrency
 fun TransactionItem(
     transaction: Transaction,
     onClick: () -> Unit,
-    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(18.dp),
+            .padding(vertical = 1.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -32,17 +30,20 @@ fun TransactionItem(
     ) {
         Row(
             modifier = Modifier
+                .clickable { onClick() }
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Cột bên trái: Tiêu đề và Danh mục/Ngày
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = transaction.title,
                     fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.titleMedium
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "${transaction.category} • ${transaction.date}",
                     style = MaterialTheme.typography.bodySmall,
@@ -50,32 +51,19 @@ fun TransactionItem(
                 )
             }
 
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = if (transaction.type == TransactionType.INCOME)
-                        "+${formatCurrency(transaction.amount)} ₫"
-                    else
-                        "-${formatCurrency(transaction.amount)} ₫",
-                    color = if (transaction.type == TransactionType.INCOME)
-                        MaterialTheme.colorScheme.onSecondary
-                    else
-                        MaterialTheme.colorScheme.secondary,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-
-                TextButton(
-                    onClick = onDelete,
-                    contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.height(32.dp)
-                ) {
-                    Text(
-                        text = "Xóa",
-                        color = MaterialTheme.colorScheme.secondary,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-            }
+            // Cột bên phải: Số tiền
+            Text(
+                text = if (transaction.type == TransactionType.INCOME)
+                    "+${formatCurrency(transaction.amount)} ₫"
+                else
+                    "-${formatCurrency(transaction.amount)} ₫",
+                color = if (transaction.type == TransactionType.INCOME)
+                    MaterialTheme.colorScheme.onSecondary
+                else
+                    MaterialTheme.colorScheme.secondary,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleMedium
+            )
         }
     }
 }
