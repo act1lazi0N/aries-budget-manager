@@ -56,7 +56,7 @@ fun TransactionListScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text(text = "Giao dich") }
+                title = { Text(text = "Giao dịch") }
             )
         },
         floatingActionButton = {
@@ -75,7 +75,7 @@ fun TransactionListScreen(
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CategoryChip(
-                    text = "Tat ca",
+                    text = "Tất cả",
                     selected = selectedFilter == TransactionFilter.ALL,
                     onClick = { selectedFilter = TransactionFilter.ALL }
                 )
@@ -93,8 +93,8 @@ fun TransactionListScreen(
 
             if (visibleTransactions.isEmpty()) {
                 EmptyState(
-                    title = "Khong co giao dich",
-                    message = "Thay doi bo loc hoac them giao dich moi."
+                    title = "Không có giao dịch",
+                    message = "Thay đổi bộ lọc hoặc thêm giao dịch mới."
                 )
             } else {
                 visibleTransactions.forEach { transaction ->
@@ -118,17 +118,17 @@ private fun TransactionListScreenPreview() {
                 transactions = listOf(
                     Transaction(
                         id = 1,
-                        title = "Luong thang",
+                        title = "Lương tháng",
                         amount = 8_000_000.0,
-                        category = "Luong",
+                        category = "Lương",
                         type = TransactionType.INCOME,
                         date = "2026-05-01"
                     ),
                     Transaction(
                         id = 2,
-                        title = "An trua",
+                        title = "Ăn trưa",
                         amount = 55_000.0,
-                        category = "An uong",
+                        category = "Ăn uống",
                         type = TransactionType.EXPENSE,
                         date = "2026-05-02"
                     )

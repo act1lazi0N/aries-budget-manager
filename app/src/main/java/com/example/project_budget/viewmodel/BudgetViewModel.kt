@@ -3,6 +3,7 @@ package com.example.project_budget.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.project_budget.data.TransactionTemp
 import com.example.project_budget.data.TransactionRepository
 import com.example.project_budget.data.local.AppDatabase
 import com.example.project_budget.model.Budget
@@ -61,6 +62,20 @@ class BudgetViewModel(
                 } else {
                     "Không tìm thấy giao dịch cần xóa."
                 }
+            )
+        }
+    }
+
+    fun importTransactions(importedTransactions: List<TransactionTemp>) {
+        viewModelScope.launch {
+            importedTransactions
+                .map { it.toTransaction() }
+                .forEach { transaction ->
+                    repository.addTransaction(transaction)
+                }
+
+            _uiState.value = createUiState(
+                message = "Đã nhập ${importedTransactions.size} giao dịch."
             )
         }
     }
@@ -183,5 +198,29 @@ class BudgetViewModel(
                 null
             }
         }
+    }
+
+    private fun TransactionTemp.toTransaction(): Transaction {
+        val transactionType = when (type.trim().lowercase()) {
+            "income", "thu", "thu nhập", "thu nhap" -> TransactionType.INCOME
+            else -> TransactionType.EXPENSE
+        }
+        val trimmedCategory = category.ifBlank {
+            if (transactionType == TransactionType.INCOME) "Thu nhập" else "Chi tiêu"
+        }
+        val wallet = _uiState.value.wallets.firstOrNull { it.name.equals(this.wallet, ignoreCase = true) }
+        val title = note.ifBlank {
+            "${transactionType.displayName} $trimmedCategory"
+        }
+
+        return Transaction(
+            title = title,
+            amount = amount,
+            category = trimmedCategory,
+            type = transactionType,
+            date = date,
+            note = note,
+            walletId = wallet?.id ?: (_uiState.value.wallets.firstOrNull()?.id ?: 1)
+        )
     }
 }

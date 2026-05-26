@@ -54,7 +54,7 @@ fun HomeScreen(
                     Column {
                         Text(text = "Aries")
                         Text(
-                            text = "Quan ly ngan sach",
+                            text = "Quản lý ngân sách",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -87,12 +87,12 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 StatCard(
-                    title = "Chi thang nay",
+                    title = "Chi tháng này",
                     value = formatMoney(uiState.totalExpense),
                     modifier = Modifier.weight(1f)
                 )
                 StatCard(
-                    title = "Giao dich",
+                    title = "Giao dịch",
                     value = uiState.totalTransactions.toString(),
                     modifier = Modifier.weight(1f)
                 )
@@ -100,13 +100,13 @@ fun HomeScreen(
 
             if (topCategory != null) {
                 StatCard(
-                    title = "Danh muc chi nhieu nhat",
+                    title = "Danh mục chi nhiều nhất",
                     value = "${topCategory.key} - ${formatMoney(topCategory.value)}"
                 )
             }
 
             if (uiState.budgets.isNotEmpty()) {
-                SectionTitle(text = "Ngan sach")
+                SectionTitle(text = "Ngân sách")
                 uiState.budgets.take(2).forEach { budget ->
                     BudgetProgressCard(
                         category = budget.category,
@@ -120,20 +120,20 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SectionTitle(text = "Giao dich gan day")
+                SectionTitle(text = "Giao dịch gần đây")
                 TextButton(onClick = onViewAllTransactionsClick) {
-                    Text(text = "Xem tat ca")
+                    Text(text = "Xem tất cả")
                 }
             }
 
             if (recentTransactions.isEmpty()) {
                 EmptyState(
-                    title = "Chua co giao dich",
-                    message = "Them giao dich dau tien de theo doi ngan sach."
+                    title = "Chưa có giao dịch",
+                    message = "Thêm giao dịch đầu tiên để theo dõi ngân sách."
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(onClick = onAddTransactionClick) {
-                    Text(text = "Them giao dich")
+                    Text(text = "Thêm giao dịch")
                 }
             } else {
                 recentTransactions.forEach { transaction ->
@@ -175,17 +175,17 @@ private val previewUiState = BudgetUiState(
     transactions = listOf(
         Transaction(
             id = 1,
-            title = "Luong thang",
+            title = "Lương tháng",
             amount = 8_000_000.0,
-            category = "Luong",
+            category = "Lương",
             type = TransactionType.INCOME,
             date = "2026-05-01"
         ),
         Transaction(
             id = 2,
-            title = "An trua",
+            title = "Ăn trưa",
             amount = 55_000.0,
-            category = "An uong",
+            category = "Ăn uống",
             type = TransactionType.EXPENSE,
             date = "2026-05-02"
         )
@@ -194,6 +194,6 @@ private val previewUiState = BudgetUiState(
     totalIncome = 8_000_000.0,
     totalExpense = 55_000.0,
     balance = 7_945_000.0,
-    categoryStats = mapOf("An uong" to 55_000.0),
-    expenseByCategory = mapOf("An uong" to 55_000.0)
+    categoryStats = mapOf("Ăn uống" to 55_000.0),
+    expenseByCategory = mapOf("Ăn uống" to 55_000.0)
 )
