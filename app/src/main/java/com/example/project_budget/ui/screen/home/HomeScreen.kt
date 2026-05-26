@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -115,10 +115,7 @@ fun HomeScreen(
                 item {
                     SectionTitle(text = "Ngân sách")
                 }
-                itemsIndexed(
-                    items = uiState.budgets.take(2),
-                    key = { index, budget -> "budget-${budget.id}-$index" }
-                ) { _, budget ->
+                items(uiState.budgets.take(2)) { budget ->
                     BudgetProgressCard(
                         category = budget.category,
                         spent = uiState.expenseByCategory[budget.category] ?: 0.0,
@@ -151,10 +148,7 @@ fun HomeScreen(
                     }
                 }
             } else {
-                itemsIndexed(
-                    items = recentTransactions,
-                    key = { index, transaction -> "recent-transaction-${transaction.id}-$index" }
-                ) { _, transaction ->
+                items(recentTransactions) { transaction ->
                     TransactionItem(
                         transaction = transaction,
                         onClick = onViewAllTransactionsClick,
