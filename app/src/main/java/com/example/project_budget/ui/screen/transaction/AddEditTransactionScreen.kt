@@ -86,9 +86,12 @@ fun AddEditTransactionScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-    val filteredCategories = categories
+    val categorySuggestions = categories
         .filter { it.type == type }
         .ifEmpty { categories }
+    val visibleCategorySuggestions = categorySuggestions.filter { item ->
+        category.isBlank() || item.name.contains(category, ignoreCase = true)
+    }
     val selectedWalletName = wallets.firstOrNull { it.id == walletId }?.name.orEmpty()
 
     if (showDatePicker) {
@@ -196,14 +199,24 @@ fun AddEditTransactionScreen(
             ) {
                 OutlinedTextField(
                     value = category,
-                    onValueChange = {},
-                    readOnly = true,
+                    onValueChange = {
+                        category = it
+                        categoryError = null
+                        categoryExpanded = true
+                    },
                     label = { Text(text = "Danh mục (*)") },
+                    placeholder = { Text(text = "Chọn hoặc nhập danh mục mới") },
                     isError = categoryError != null,
-                    supportingText = { categoryError?.let { Text(text = it) } },
+                    supportingText = {
+                        Text(
+                            text = categoryError
+                                ?: "Có thể chọn danh mục có sẵn hoặc nhập danh mục tùy chỉnh."
+                        )
+                    },
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded)
                     },
+                    singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor()
@@ -212,11 +225,24 @@ fun AddEditTransactionScreen(
                     expanded = categoryExpanded,
                     onDismissRequest = { categoryExpanded = false }
                 ) {
-                    filteredCategories.forEach { item ->
+                    visibleCategorySuggestions.forEach { item ->
                         DropdownMenuItem(
                             text = { Text(text = item.name) },
                             onClick = {
                                 category = item.name
+                                categoryError = null
+                                categoryExpanded = false
+                            }
+                        )
+                    }
+                    if (
+                        category.isNotBlank() &&
+                        categorySuggestions.none { it.name.equals(category.trim(), ignoreCase = true) }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(text = "Dùng danh mục mới: ${category.trim()}") },
+                            onClick = {
+                                category = category.trim()
                                 categoryError = null
                                 categoryExpanded = false
                             }
@@ -321,7 +347,7 @@ fun AddEditTransactionScreen(
                             isValid = false
                         }
                         if (category.isBlank()) {
-                            categoryError = "Vui lòng chọn danh mục"
+                            categoryError = "Vui lòng chọn hoặc nhập danh mục"
                             isValid = false
                         }
                         if (wallets.none { it.id == walletId }) {
@@ -339,7 +365,7 @@ fun AddEditTransactionScreen(
                                     id = transaction?.id ?: 0,
                                     title = title.trim(),
                                     amount = parsedAmount,
-                                    category = category,
+                                    category = category.trim(),
                                     type = type,
                                     date = date,
                                     note = note.trim(),

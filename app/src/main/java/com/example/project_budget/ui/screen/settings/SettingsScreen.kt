@@ -44,8 +44,7 @@ private const val DefaultStatus =
 fun SettingsScreen(
     transactions: List<Transaction>,
     wallets: List<Wallet>,
-    onImportCsvClick: () -> Unit,
-    onImportJsonClick: () -> Unit,
+    onImportTransactions: (List<TransactionTemp>) -> Unit,
     onAboutClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -55,11 +54,11 @@ fun SettingsScreen(
     val csvExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
     ) { uri ->
-        if (uri == null) {
-            statusMessage = "Đã hủy xuất CSV."
+        statusMessage = if (uri == null) {
+            "Đã hủy xuất CSV."
         } else {
             val content = CsvExporter.exportToCsv(transactions.toExportRows(wallets))
-            statusMessage = writeExportFile(
+            writeExportFile(
                 context = context,
                 uri = uri,
                 content = content,
@@ -71,11 +70,11 @@ fun SettingsScreen(
     val jsonExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
-        if (uri == null) {
-            statusMessage = "Đã hủy xuất JSON."
+        statusMessage = if (uri == null) {
+            "Đã hủy xuất JSON."
         } else {
             val content = JsonExporter.exportToJson(transactions.toExportRows(wallets))
-            statusMessage = writeExportFile(
+            writeExportFile(
                 context = context,
                 uri = uri,
                 content = content,
@@ -87,33 +86,31 @@ fun SettingsScreen(
     val csvImportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        statusMessage = if (uri == null) {
-            "Đã hủy nhập CSV."
-        } else {
-            readImportFile(context, uri).fold(
-                onSuccess = { content ->
-                    val importedCount = CsvExporter.importFromCsv(content).size
-                    "Đã đọc CSV: $importedCount giao dịch hợp lệ."
-                },
-                onFailure = { "Không thể đọc file CSV. Vui lòng thử lại." }
-            )
-        }
+        statusMessage = importTransactionsFromUri(
+            context = context,
+            uri = uri,
+            canceledMessage = "Đã hủy nhập CSV.",
+            readErrorMessage = "Không thể đọc file CSV. Vui lòng thử lại.",
+            emptyMessage = "File CSV không có giao dịch hợp lệ.",
+            successMessage = { count -> "Đã nhập CSV: $count giao dịch hợp lệ." },
+            parser = CsvExporter::importFromCsv,
+            onImportTransactions = onImportTransactions
+        )
     }
 
     val jsonImportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        statusMessage = if (uri == null) {
-            "Đã hủy nhập JSON."
-        } else {
-            readImportFile(context, uri).fold(
-                onSuccess = { content ->
-                    val importedCount = JsonExporter.importFromJson(content).size
-                    "Đã đọc JSON: $importedCount giao dịch hợp lệ."
-                },
-                onFailure = { "Không thể đọc file JSON. Vui lòng thử lại." }
-            )
-        }
+        statusMessage = importTransactionsFromUri(
+            context = context,
+            uri = uri,
+            canceledMessage = "Đã hủy nhập JSON.",
+            readErrorMessage = "Không thể đọc file JSON. Vui lòng thử lại.",
+            emptyMessage = "File JSON không có giao dịch hợp lệ.",
+            successMessage = { count -> "Đã nhập JSON: $count giao dịch hợp lệ." },
+            parser = JsonExporter::importFromJson,
+            onImportTransactions = onImportTransactions
+        )
     }
 
     Scaffold(
@@ -162,8 +159,6 @@ fun SettingsScreen(
             }
             OutlinedButton(
                 onClick = {
-                    onImportCsvClick()
-                    // TODO: Persist imported transactions after duplicate/overwrite rules are finalized.
                     statusMessage = "Đã chọn nhập CSV. Vui lòng chọn file CSV hợp lệ."
                     csvImportLauncher.launch(arrayOf("text/*", "text/csv", "application/vnd.ms-excel"))
                 },
@@ -173,8 +168,6 @@ fun SettingsScreen(
             }
             OutlinedButton(
                 onClick = {
-                    onImportJsonClick()
-                    // TODO: Persist imported transactions after duplicate/overwrite rules are finalized.
                     statusMessage = "Đã chọn nhập JSON. Vui lòng chọn file JSON hợp lệ."
                     jsonImportLauncher.launch(arrayOf("application/json", "text/*"))
                 },
@@ -192,6 +185,32 @@ fun SettingsScreen(
             }
         }
     }
+}
+
+private fun importTransactionsFromUri(
+    context: Context,
+    uri: Uri?,
+    canceledMessage: String,
+    readErrorMessage: String,
+    emptyMessage: String,
+    successMessage: (Int) -> String,
+    parser: (String) -> List<TransactionTemp>,
+    onImportTransactions: (List<TransactionTemp>) -> Unit
+): String {
+    if (uri == null) return canceledMessage
+
+    return readImportFile(context, uri).fold(
+        onSuccess = { content ->
+            val importedTransactions = parser(content)
+            if (importedTransactions.isEmpty()) {
+                emptyMessage
+            } else {
+                onImportTransactions(importedTransactions)
+                successMessage(importedTransactions.size)
+            }
+        },
+        onFailure = { readErrorMessage }
+    )
 }
 
 private fun List<Transaction>.toExportRows(wallets: List<Wallet>): List<TransactionTemp> {
@@ -248,8 +267,7 @@ private fun SettingsScreenPreview() {
         SettingsScreen(
             transactions = emptyList(),
             wallets = emptyList(),
-            onImportCsvClick = {},
-            onImportJsonClick = {},
+            onImportTransactions = {},
             onAboutClick = {}
         )
     }

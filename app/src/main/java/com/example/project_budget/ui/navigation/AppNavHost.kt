@@ -141,8 +141,7 @@ fun AppNavHost(
                 SettingsScreen(
                     transactions = uiState.transactions,
                     wallets = uiState.wallets,
-                    onImportCsvClick = {},
-                    onImportJsonClick = {},
+                    onImportTransactions = viewModel::importTransactions,
                     onAboutClick = {
                         navController.navigate(Screen.About.route)
                     }
