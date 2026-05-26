@@ -24,7 +24,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.project_budget.ui.components.AppBottomBar
+import com.example.project_budget.ui.screen.about.AboutScreen
 import com.example.project_budget.ui.screen.home.HomeScreen
+import com.example.project_budget.ui.screen.settings.SettingsScreen
+import com.example.project_budget.ui.screen.statistics.StatisticsScreen
 import com.example.project_budget.ui.screen.transaction.AddEditTransactionScreen
 import com.example.project_budget.ui.screen.transaction.TransactionListScreen
 import com.example.project_budget.viewmodel.BudgetViewModel
@@ -131,15 +134,25 @@ fun AppNavHost(
             }
 
             composable(Screen.Statistics.route) {
-                PlaceholderScreen(title = "Thống kê", paddingValues = PaddingValues())
+                StatisticsScreen(uiState = uiState)
             }
 
             composable(Screen.Settings.route) {
-                PlaceholderScreen(title = "Cài đặt", paddingValues = PaddingValues())
+                SettingsScreen(
+                    transactions = uiState.transactions,
+                    wallets = uiState.wallets,
+                    onImportCsvClick = {},
+                    onImportJsonClick = {},
+                    onAboutClick = {
+                        navController.navigate(Screen.About.route)
+                    }
+                )
             }
 
             composable(Screen.About.route) {
-                PlaceholderScreen(title = "Giới thiệu", paddingValues = PaddingValues())
+                AboutScreen(
+                    onBackClick = { navController.popBackStack() }
+                )
             }
         }
     }

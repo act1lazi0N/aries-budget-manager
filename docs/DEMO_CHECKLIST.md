@@ -50,3 +50,12 @@ Lệnh tạo tag:
 git tag v1.0-submission
 git push origin v1.0-submission
 ```
+
+## 5. Bằng chứng QA của Person 4
+
+- [ ] Màn hình Statistics hiển thị tổng số giao dịch, tổng thu, tổng chi, số dư, trung bình, nhỏ nhất, lớn nhất, tổng theo danh mục, phần trăm danh mục và cảnh báo vượt ngân sách.
+- [ ] Màn hình Settings có mục nhập/xuất CSV và JSON.
+- [ ] Màn hình About mở được từ Settings và quay lại được bằng điều hướng back.
+- [ ] Logcat với bộ lọc `AriesLifecycle` hiển thị `onCreate`, `onStart`, `onResume`, `onPause`, `onStop` và `onDestroy`.
+- [ ] Xoay emulator sau khi thêm giao dịch và xác nhận thống kê vẫn khớp với danh sách giao dịch.
+- [ ] Chụp ảnh màn hình Statistics, Settings, About và Logcat lifecycle trước khi nộp bài.
