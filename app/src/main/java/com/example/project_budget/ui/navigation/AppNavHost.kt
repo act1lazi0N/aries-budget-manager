@@ -27,9 +27,6 @@ fun AppNavHost() {
                 onViewAllTransactionsClick = {
                     navController.navigate(Screen.Transactions.route)
                 },
-                onEditTransactionClick = { transaction ->
-                    navController.navigate("edit_transaction/${transaction.id}")
-                },
                 onBottomNavClick = { route ->
                     navController.navigate(route)
                 }
