@@ -39,7 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
                             (id, title, amount, category, type, date, note, walletId)
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         """.trimIndent(),
-                        arrayOf(
+                        arrayOf<Any?>(
                             transaction.id,
                             transaction.title,
                             transaction.amount,

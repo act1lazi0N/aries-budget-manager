@@ -79,6 +79,6 @@ private fun BalanceSummary(label: String, amount: Double) {
 }
 
 fun formatMoney(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
+    val formatter = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("vi-VN"))
     return formatter.format(amount)
 }

@@ -99,9 +99,12 @@ fun AppNavHost(
                     wallets = uiState.wallets,
                     onSaveClick = { transaction ->
                         viewModel.addTransaction(transaction)
-                        navController.popBackStack()
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route)
+                            launchSingleTop = true
+                        }
                     },
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.navigateBackToHome() }
                 )
             }
 
@@ -154,6 +157,13 @@ fun AppNavHost(
                 )
             }
         }
+    }
+}
+
+private fun NavHostController.navigateBackToHome() {
+    navigate(Screen.Home.route) {
+        popUpTo(Screen.Home.route)
+        launchSingleTop = true
     }
 }
 
