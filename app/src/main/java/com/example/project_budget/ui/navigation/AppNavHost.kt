@@ -97,11 +97,17 @@ fun AppNavHost(
                 AddEditTransactionScreen(
                     categories = uiState.categories,
                     wallets = uiState.wallets,
+                    defaultCurrency = uiState.defaultCurrency,
+                    supportedCurrencies = uiState.supportedCurrencies,
+                    isSaving = uiState.isSavingTransaction,
+                    errorMessage = uiState.errorMessage,
+                    onDismissError = viewModel::clearMessage,
                     onSaveClick = { transaction ->
-                        viewModel.addTransaction(transaction)
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Home.route)
-                            launchSingleTop = true
+                        viewModel.addTransactionWithCurrencyConversion(transaction) {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route)
+                                launchSingleTop = true
+                            }
                         }
                     },
                     onBackClick = { navController.navigateBackToHome() }
@@ -126,10 +132,16 @@ fun AppNavHost(
                     AddEditTransactionScreen(
                         categories = uiState.categories,
                         wallets = uiState.wallets,
+                        defaultCurrency = uiState.defaultCurrency,
+                        supportedCurrencies = uiState.supportedCurrencies,
+                        isSaving = uiState.isSavingTransaction,
+                        errorMessage = uiState.errorMessage,
+                        onDismissError = viewModel::clearMessage,
                         transaction = transaction,
                         onSaveClick = { updatedTransaction ->
-                            viewModel.updateTransaction(updatedTransaction)
-                            navController.popBackStack()
+                            viewModel.updateTransactionWithCurrencyConversion(updatedTransaction) {
+                                navController.popBackStack()
+                            }
                         },
                         onBackClick = { navController.popBackStack() }
                     )

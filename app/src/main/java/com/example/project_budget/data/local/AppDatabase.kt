@@ -4,12 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.project_budget.data.SampleData
 
 @Database(
     entities = [TransactionEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -25,7 +26,11 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "aries_budget.db"
-                ).addCallback(initialDataCallback).build().also { INSTANCE = it }
+                )
+                    .addMigrations(MIGRATION_1_2)
+                    .addCallback(initialDataCallback)
+                    .build()
+                    .also { INSTANCE = it }
             }
         }
 
@@ -36,13 +41,21 @@ abstract class AppDatabase : RoomDatabase() {
                     db.execSQL(
                         """
                             INSERT INTO transactions
-                            (id, title, amount, category, type, date, note, walletId)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            (
+                                id, title, amount, currency, convertedAmount,
+                                convertedCurrency, exchangeRate, category, type,
+                                date, note, walletId
+                            )
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """.trimIndent(),
                         arrayOf<Any?>(
                             transaction.id,
                             transaction.title,
                             transaction.amount,
+                            transaction.currency,
+                            transaction.convertedAmount,
+                            transaction.convertedCurrency,
+                            transaction.exchangeRate,
                             transaction.category,
                             transaction.type.name,
                             transaction.date,
@@ -51,6 +64,16 @@ abstract class AppDatabase : RoomDatabase() {
                         )
                     )
                 }
+            }
+        }
+
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE transactions ADD COLUMN currency TEXT NOT NULL DEFAULT 'VND'")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN convertedAmount REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN convertedCurrency TEXT NOT NULL DEFAULT 'VND'")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN exchangeRate REAL NOT NULL DEFAULT 1.0")
+                db.execSQL("UPDATE transactions SET convertedAmount = amount WHERE convertedAmount = 0.0")
             }
         }
     }
