@@ -13,7 +13,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -23,6 +25,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -42,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.project_budget.model.Category
+import com.example.project_budget.model.DEFAULT_CURRENCY
 import com.example.project_budget.model.Transaction
 import com.example.project_budget.model.TransactionType
 import com.example.project_budget.model.Wallet
@@ -54,6 +58,11 @@ import java.util.Locale
 fun AddEditTransactionScreen(
     categories: List<Category>,
     wallets: List<Wallet>,
+    defaultCurrency: String = DEFAULT_CURRENCY,
+    supportedCurrencies: List<String> = listOf(DEFAULT_CURRENCY, "USD", "EUR", "JPY", "KRW"),
+    isSaving: Boolean = false,
+    errorMessage: String? = null,
+    onDismissError: () -> Unit = {},
     transaction: Transaction? = null,
     onSaveClick: (Transaction) -> Unit,
     onBackClick: () -> Unit,
@@ -67,6 +76,7 @@ fun AddEditTransactionScreen(
     var amount by remember(transaction?.id) {
         mutableStateOf(transaction?.amount?.takeIf { it > 0.0 }?.toPlainText().orEmpty())
     }
+    var currency by remember(transaction?.id) { mutableStateOf(transaction?.currency ?: defaultCurrency) }
     var type by remember(transaction?.id) { mutableStateOf(transaction?.type ?: TransactionType.EXPENSE) }
     var category by remember(transaction?.id) { mutableStateOf(transaction?.category.orEmpty()) }
     var walletId by remember(transaction?.id) { mutableStateOf(transaction?.walletId ?: defaultWalletId) }
@@ -77,11 +87,13 @@ fun AddEditTransactionScreen(
 
     var titleError by remember { mutableStateOf<String?>(null) }
     var amountError by remember { mutableStateOf<String?>(null) }
+    var currencyError by remember { mutableStateOf<String?>(null) }
     var categoryError by remember { mutableStateOf<String?>(null) }
     var walletError by remember { mutableStateOf<String?>(null) }
     var noteError by remember { mutableStateOf<String?>(null) }
 
     var categoryExpanded by remember { mutableStateOf(false) }
+    var currencyExpanded by remember { mutableStateOf(false) }
     var walletExpanded by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
@@ -93,6 +105,28 @@ fun AddEditTransactionScreen(
         category.isBlank() || item.name.contains(category, ignoreCase = true)
     }
     val selectedWalletName = wallets.firstOrNull { it.id == walletId }?.name.orEmpty()
+    val parsedAmount = amount.toDoubleOrNull()
+    val previewAmount = when {
+        parsedAmount == null -> null
+        currency == defaultCurrency -> parsedAmount
+        transaction?.currency == currency &&
+            transaction.convertedCurrency == defaultCurrency &&
+            transaction.exchangeRate > 0.0 -> parsedAmount * transaction.exchangeRate
+        else -> null
+    }
+
+    if (errorMessage != null) {
+        AlertDialog(
+            onDismissRequest = onDismissError,
+            title = { Text(text = "Khong the luu giao dich") },
+            text = { Text(text = errorMessage) },
+            confirmButton = {
+                TextButton(onClick = onDismissError) {
+                    Text(text = "OK")
+                }
+            }
+        )
+    }
 
     if (showDatePicker) {
         DatePickerDialog(
@@ -124,6 +158,14 @@ fun AddEditTransactionScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Quay lai"
+                        )
+                    }
+                },
                 title = {
                     Text(text = if (isEditMode) "Sửa giao dịch" else "Thêm giao dịch")
                 }
@@ -164,6 +206,50 @@ fun AddEditTransactionScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
+
+            ExposedDropdownMenuBox(
+                expanded = currencyExpanded,
+                onExpandedChange = { currencyExpanded = !currencyExpanded }
+            ) {
+                OutlinedTextField(
+                    value = currency,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(text = "Tiền tệ (*)") },
+                    isError = currencyError != null,
+                    supportingText = {
+                        Text(
+                            text = currencyError
+                                ?: previewAmount?.let {
+                                    "${amount.ifBlank { "0" }} $currency ~= ${it.toPlainText()} $defaultCurrency"
+                                }
+                                ?: "Sẽ quy đổi sang $defaultCurrency khi lưu giao dịch."
+                        )
+                    },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = currencyExpanded)
+                    },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                )
+                ExposedDropdownMenu(
+                    expanded = currencyExpanded,
+                    onDismissRequest = { currencyExpanded = false }
+                ) {
+                    supportedCurrencies.forEach { item ->
+                        DropdownMenuItem(
+                            text = { Text(text = item) },
+                            onClick = {
+                                currency = item
+                                currencyError = null
+                                currencyExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -219,7 +305,7 @@ fun AddEditTransactionScreen(
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor()
+                        .menuAnchor(MenuAnchorType.PrimaryEditable)
                 )
                 ExposedDropdownMenu(
                     expanded = categoryExpanded,
@@ -267,7 +353,7 @@ fun AddEditTransactionScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                 )
                 ExposedDropdownMenu(
                     expanded = walletExpanded,
@@ -335,7 +421,6 @@ fun AddEditTransactionScreen(
                 }
                 Button(
                     onClick = {
-                        val parsedAmount = amount.toDoubleOrNull()
                         var isValid = true
 
                         if (title.isBlank()) {
@@ -344,6 +429,10 @@ fun AddEditTransactionScreen(
                         }
                         if (parsedAmount == null || parsedAmount <= 0.0) {
                             amountError = "Số tiền phải lớn hơn 0"
+                            isValid = false
+                        }
+                        if (currency.isBlank() || currency !in supportedCurrencies) {
+                            currencyError = "Loại tiền này hiện chưa được hỗ trợ"
                             isValid = false
                         }
                         if (category.isBlank()) {
@@ -365,6 +454,10 @@ fun AddEditTransactionScreen(
                                     id = transaction?.id ?: 0,
                                     title = title.trim(),
                                     amount = parsedAmount,
+                                    currency = currency,
+                                    convertedAmount = transaction?.convertedAmount ?: parsedAmount,
+                                    convertedCurrency = defaultCurrency,
+                                    exchangeRate = transaction?.exchangeRate ?: 1.0,
                                     category = category.trim(),
                                     type = type,
                                     date = date,
@@ -374,9 +467,16 @@ fun AddEditTransactionScreen(
                             )
                         }
                     },
+                    enabled = !isSaving,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(text = if (isEditMode) "Cập nhật" else "Thêm")
+                    Text(
+                        text = when {
+                            isSaving -> "Đang lưu..."
+                            isEditMode -> "Cập nhật"
+                            else -> "Thêm"
+                        }
+                    )
                 }
             }
         }

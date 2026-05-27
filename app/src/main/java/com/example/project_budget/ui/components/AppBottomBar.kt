@@ -3,8 +3,8 @@ package com.example.project_budget.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -66,7 +66,7 @@ private fun BottomBarIcon(screen: Screen) {
         )
 
         Screen.Transactions -> MaterialBottomBarIcon(
-            imageVector = Icons.Filled.List,
+            imageVector = Icons.AutoMirrored.Filled.List,
             contentDescription = "Giao dịch"
         )
 

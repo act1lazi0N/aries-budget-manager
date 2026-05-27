@@ -9,6 +9,10 @@ object JsonExporter {
         transactions.forEach { t ->
             val jsonObj = JSONObject().apply {
                 put("amount", t.amount)
+                put("currency", t.currency)
+                put("convertedAmount", t.convertedAmount)
+                put("convertedCurrency", t.convertedCurrency)
+                put("exchangeRate", t.exchangeRate)
                 put("type", t.type)
                 put("category", t.category)
                 put("wallet", t.wallet)
@@ -36,7 +40,11 @@ object JsonExporter {
                             category = obj.optString("category", ""),
                             wallet = obj.optString("wallet", ""),
                             date = obj.optString("date", ""),
-                            note = obj.optString("note", "")
+                            note = obj.optString("note", ""),
+                            currency = obj.optString("currency", "VND"),
+                            convertedAmount = obj.optDouble("convertedAmount", amount),
+                            convertedCurrency = obj.optString("convertedCurrency", "VND"),
+                            exchangeRate = obj.optDouble("exchangeRate", 1.0)
                         )
                     )
                 }

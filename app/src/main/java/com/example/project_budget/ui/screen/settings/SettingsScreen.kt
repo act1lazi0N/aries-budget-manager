@@ -221,7 +221,11 @@ private fun List<Transaction>.toExportRows(wallets: List<Wallet>): List<Transact
             category = transaction.category,
             wallet = wallets.firstOrNull { it.id == transaction.walletId }?.name.orEmpty(),
             date = transaction.date,
-            note = transaction.note
+            note = transaction.note,
+            currency = transaction.currency,
+            convertedAmount = transaction.convertedAmount,
+            convertedCurrency = transaction.convertedCurrency,
+            exchangeRate = transaction.exchangeRate
         )
     }
 }

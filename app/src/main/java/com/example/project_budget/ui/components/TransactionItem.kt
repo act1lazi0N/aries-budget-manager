@@ -74,10 +74,18 @@ fun TransactionItem(
                     }
                 }
                 Text(
-                    text = "$amountPrefix${formatMoney(transaction.amount)}",
+                    text = "$amountPrefix${formatMoney(transaction.convertedAmount)}",
                     color = amountColor,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
+                )
+            }
+            if (transaction.currency != transaction.convertedCurrency) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${transaction.amount} ${transaction.currency} ~= ${formatMoney(transaction.convertedAmount)}",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
             if (showDeleteAction) {

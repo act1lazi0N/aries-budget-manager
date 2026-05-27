@@ -6,7 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.project_budget.data.TransactionTemp
 import com.example.project_budget.data.TransactionRepository
 import com.example.project_budget.data.local.AppDatabase
+import com.example.project_budget.data.repository.CurrencyRepository
 import com.example.project_budget.model.Budget
+import com.example.project_budget.model.DEFAULT_CURRENCY
 import com.example.project_budget.model.Transaction
 import com.example.project_budget.model.TransactionType
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +22,7 @@ class BudgetViewModel(
     private val repository = TransactionRepository(
         transactionDao = AppDatabase.getInstance(application).transactionDao()
     )
+    private val currencyRepository = CurrencyRepository()
     private val _uiState = MutableStateFlow(
         BudgetUiState(
             categories = repository.getCategories(),
@@ -31,6 +34,7 @@ class BudgetViewModel(
 
     init {
         refreshState()
+        loadSupportedCurrencies()
     }
 
     fun addTransaction(transaction: Transaction) {
@@ -51,6 +55,35 @@ class BudgetViewModel(
                 }
             )
         }
+    }
+
+    fun addTransactionWithCurrencyConversion(
+        transaction: Transaction,
+        onSuccess: () -> Unit
+    ) {
+        saveTransactionWithCurrencyConversion(
+            transaction = transaction,
+            successMessage = "Da them giao dich.",
+            onSuccess = onSuccess,
+            save = repository::addTransaction
+        )
+    }
+
+    fun updateTransactionWithCurrencyConversion(
+        transaction: Transaction,
+        onSuccess: () -> Unit
+    ) {
+        saveTransactionWithCurrencyConversion(
+            transaction = transaction,
+            successMessage = "Da cap nhat giao dich.",
+            onSuccess = onSuccess,
+            save = { updatedTransaction ->
+                if (!repository.updateTransaction(updatedTransaction)) {
+                    error("Khong tim thay giao dich can cap nhat.")
+                }
+                updatedTransaction
+            }
+        )
     }
 
     fun deleteTransaction(transactionId: Int) {
@@ -116,6 +149,79 @@ class BudgetViewModel(
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 
+    private fun loadSupportedCurrencies() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isCurrencyLoading = true)
+            val currencies = runCatching {
+                currencyRepository.getSupportedCurrencies()
+            }.getOrElse {
+                DefaultSupportedCurrencies.toSet()
+            }
+
+            val visibleCurrencies = DefaultSupportedCurrencies
+                .filter { it in currencies || it == DEFAULT_CURRENCY }
+                .ifEmpty { DefaultSupportedCurrencies }
+
+            _uiState.value = _uiState.value.copy(
+                supportedCurrencies = visibleCurrencies,
+                isCurrencyLoading = false
+            )
+        }
+    }
+
+    private fun saveTransactionWithCurrencyConversion(
+        transaction: Transaction,
+        successMessage: String,
+        onSuccess: () -> Unit,
+        save: suspend (Transaction) -> Transaction
+    ) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isSavingTransaction = true,
+                errorMessage = null
+            )
+
+            runCatching {
+                val convertedTransaction = convertTransactionAmount(transaction)
+                save(convertedTransaction)
+            }.fold(
+                onSuccess = {
+                    _uiState.value = createUiState(message = successMessage)
+                    onSuccess()
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isSavingTransaction = false,
+                        errorMessage = error.message
+                            ?: "Khong the lay ty gia. Vui long thu lai."
+                    )
+                }
+            )
+        }
+    }
+
+    private suspend fun convertTransactionAmount(transaction: Transaction): Transaction {
+        val baseCurrency = transaction.currency.uppercase()
+        val targetCurrency = _uiState.value.defaultCurrency.uppercase()
+        val supportedCurrencies = _uiState.value.supportedCurrencies
+
+        if (baseCurrency !in supportedCurrencies || targetCurrency !in supportedCurrencies) {
+            error("Loai tien nay hien chua duoc ho tro.")
+        }
+
+        val rate = currencyRepository.getRate(
+            fromCurrency = baseCurrency,
+            toCurrency = targetCurrency
+        )
+
+        return transaction.copy(
+            currency = rate.base,
+            convertedAmount = transaction.amount * rate.rate,
+            convertedCurrency = rate.quote,
+            exchangeRate = rate.rate
+        )
+    }
+
     private fun refreshState(message: String? = null) {
         viewModelScope.launch {
             _uiState.value = createUiState(message)
@@ -126,14 +232,14 @@ class BudgetViewModel(
         val transactions = repository.getAllTransactions()
         val totalIncome = transactions
             .filter { it.type == TransactionType.INCOME }
-            .sumOf { it.amount }
+            .sumOf { it.convertedAmount }
         val totalExpense = transactions
             .filter { it.type == TransactionType.EXPENSE }
-            .sumOf { it.amount }
+            .sumOf { it.convertedAmount }
         val expenseByCategory = transactions
             .filter { it.type == TransactionType.EXPENSE }
             .groupBy { it.category }
-            .mapValues { entry -> entry.value.sumOf { it.amount } }
+            .mapValues { entry -> entry.value.sumOf { it.convertedAmount } }
         val categoryPercentages = calculateCategoryPercentages(expenseByCategory, totalExpense)
         val budgets = repository.getBudgets()
         val overBudgetCategories = findOverBudgetCategories(expenseByCategory, budgets)
@@ -143,6 +249,8 @@ class BudgetViewModel(
             categories = repository.getCategories(),
             wallets = repository.getWallets(),
             budgets = budgets,
+            defaultCurrency = _uiState.value.defaultCurrency,
+            supportedCurrencies = _uiState.value.supportedCurrencies,
             totalTransactions = transactions.size,
             totalIncome = totalIncome,
             totalExpense = totalExpense,
@@ -150,10 +258,10 @@ class BudgetViewModel(
             averageAmount = if (transactions.isEmpty()) {
                 0.0
             } else {
-                transactions.sumOf { it.amount } / transactions.size
+                transactions.sumOf { it.convertedAmount } / transactions.size
             },
-            maxTransaction = transactions.maxByOrNull { it.amount },
-            minTransaction = transactions.minByOrNull { it.amount },
+            maxTransaction = transactions.maxByOrNull { it.convertedAmount },
+            minTransaction = transactions.minByOrNull { it.convertedAmount },
             categoryStats = expenseByCategory,
             expenseByCategory = expenseByCategory,
             categoryPercentages = categoryPercentages,
@@ -216,6 +324,10 @@ class BudgetViewModel(
         return Transaction(
             title = title,
             amount = amount,
+            currency = currency.ifBlank { DEFAULT_CURRENCY }.uppercase(),
+            convertedAmount = convertedAmount,
+            convertedCurrency = convertedCurrency.ifBlank { DEFAULT_CURRENCY }.uppercase(),
+            exchangeRate = exchangeRate,
             category = trimmedCategory,
             type = transactionType,
             date = date,

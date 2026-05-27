@@ -6,15 +6,19 @@ data class TransactionTemp(
     val category: String,
     val wallet: String,
     val date: String,
-    val note: String
+    val note: String,
+    val currency: String = "VND",
+    val convertedAmount: Double = amount,
+    val convertedCurrency: String = "VND",
+    val exchangeRate: Double = 1.0
 )
 
 object CsvExporter {
     fun exportToCsv(transactions: List<TransactionTemp>): String {
         return buildString {
-            append("Số tiền,Loại,Danh mục,Ví,Ngày,Ghi chú\n")
+            append("So tien,Tien te,So tien quy doi,Tien te quy doi,Ty gia,Loai,Danh muc,Vi,Ngay,Ghi chu\n")
             transactions.forEach { t ->
-                append("${t.amount},${t.type},${t.category},${t.wallet},${t.date},${t.note}\n")
+                append("${t.amount},${t.currency},${t.convertedAmount},${t.convertedCurrency},${t.exchangeRate},${t.type},${t.category},${t.wallet},${t.date},${t.note}\n")
             }
         }
     }
@@ -26,10 +30,37 @@ object CsvExporter {
         if (lines.size > 1) {
             for (i in 1 until lines.size) {
                 val cols = lines[i].split(",")
-                if (cols.size >= 6) {
+                if (cols.size >= 10) {
                     val amount = cols[0].toDoubleOrNull()
                     if (amount != null && amount > 0) {
-                        list.add(TransactionTemp(amount, cols[1], cols[2], cols[3], cols[4], cols[5]))
+                        list.add(
+                            TransactionTemp(
+                                amount = amount,
+                                type = cols[5],
+                                category = cols[6],
+                                wallet = cols[7],
+                                date = cols[8],
+                                note = cols[9],
+                                currency = cols[1].ifBlank { "VND" },
+                                convertedAmount = cols[2].toDoubleOrNull() ?: amount,
+                                convertedCurrency = cols[3].ifBlank { "VND" },
+                                exchangeRate = cols[4].toDoubleOrNull() ?: 1.0
+                            )
+                        )
+                    }
+                } else if (cols.size >= 6) {
+                    val amount = cols[0].toDoubleOrNull()
+                    if (amount != null && amount > 0) {
+                        list.add(
+                            TransactionTemp(
+                                amount = amount,
+                                type = cols[1],
+                                category = cols[2],
+                                wallet = cols[3],
+                                date = cols[4],
+                                note = cols[5]
+                            )
+                        )
                     }
                 }
             }
@@ -37,3 +68,4 @@ object CsvExporter {
         return list
     }
 }
+

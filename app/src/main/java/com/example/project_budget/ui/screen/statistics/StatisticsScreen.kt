@@ -136,7 +136,7 @@ fun StatisticsScreen(
 }
 
 private fun formatTransactionSummary(transaction: Transaction): String {
-    return "${transaction.title} - ${formatMoney(transaction.amount)}"
+    return "${transaction.title} - ${formatMoney(transaction.convertedAmount)}"
 }
 
 @Composable
