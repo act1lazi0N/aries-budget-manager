@@ -118,7 +118,7 @@ fun AddEditTransactionScreen(
     if (errorMessage != null) {
         AlertDialog(
             onDismissRequest = onDismissError,
-            title = { Text(text = "Khong the luu giao dich") },
+            title = { Text(text = "Không thể lưu giao dịch") },
             text = { Text(text = errorMessage) },
             confirmButton = {
                 TextButton(onClick = onDismissError) {
@@ -162,7 +162,7 @@ fun AddEditTransactionScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Quay lai"
+                            contentDescription = "Quay lại"
                         )
                     }
                 },
