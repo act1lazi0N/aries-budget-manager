@@ -3,57 +3,32 @@
 *.ap_
 *.aab
 
-# Files for the ART/Dalvik VM
+# ART / Dalvik files
 *.dex
 
-# Java class files
+# Java / Kotlin build output
 *.class
-
-# Generated files
 bin/
 gen/
 out/
-
-# Gradle files
-.gradle/
 build/
-
-# Local configuration file (sdk path, etc)
-local.properties
+.gradle/
+.kotlin/
 
 # Android Studio / IntelliJ IDEA
 .idea/
 *.iml
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/gradle.xml
-.idea/assetWizardSettings.xml
-.idea/dictionaries
-.idea/libraries
-.idea/caches
-.idea/modules.xml
-.idea/.name
-.idea/compiler.xml
-.idea/misc.xml
-.idea/jarRepositories.xml
-.idea/vcs.xml
-.idea/deploymentTargetDropDown.xml
-
-# Android Studio captures folder
 captures/
 
-# Keystore files
-*.jks
-*.keystore
-
-# External native build folder generated in Android Studio 2.2 and later
-.externalNativeBuild
+# Native build output
+.externalNativeBuild/
 .cxx/
 
-# Log Files
+# Logs and profiling
 *.log
+*.hprof
 
-# Operating System Files
+# OS files
 .DS_Store
 .DS_Store?
 ._*
@@ -62,10 +37,19 @@ captures/
 ehthumbs.db
 Thumbs.db
 
-# Android Profiling
-*.hprof
+# Firebase / local secrets
+app/google-services.json
+google-services.json
+local.properties
+.env
+.env.local
+*.keystore
+*.jks
 
-# Crucial folder
-.codex
-.idea
+# AI assistant local files
+.codex/
+.cursor/
+.ai/
+
+# Project-local agent instructions
 AGENTS.md
