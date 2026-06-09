@@ -1,251 +1,199 @@
 package com.example.project_budget.ui.screen.home
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.project_budget.model.Transaction
 import com.example.project_budget.model.TransactionType
-import com.example.project_budget.ui.navigation.Screen
+import com.example.project_budget.ui.components.BalanceCard
+import com.example.project_budget.ui.components.BudgetProgressCard
+import com.example.project_budget.ui.components.EmptyState
+import com.example.project_budget.ui.components.StatCard
+import com.example.project_budget.ui.components.TransactionItem
+import com.example.project_budget.ui.components.formatMoney
+import com.example.project_budget.ui.theme.Project_BudgetTheme
+import com.example.project_budget.viewmodel.BudgetUiState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    transactions: List<Transaction>,
+    uiState: BudgetUiState,
     onAddTransactionClick: () -> Unit,
     onViewAllTransactionsClick: () -> Unit,
-    onBottomNavClick: (String) -> Unit
+    modifier: Modifier = Modifier
 ) {
-    val income = transactions.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
-    val expense = transactions.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
-    val balance = income - expense
-
-    val topExpenseEntry = transactions
-        .filter { it.type == TransactionType.EXPENSE }
-        .groupBy { it.category }
-        .maxByOrNull { it.value.sumOf { t -> t.amount } }
-
-    val topExpenseCategory = topExpenseEntry?.key ?: "Chưa có dữ liệu"
-    val topExpenseAmount = topExpenseEntry?.value?.sumOf { it.amount } ?: 0.0
-
-    val foodExpense = transactions
-        .filter { it.type == TransactionType.EXPENSE && it.category == "Ăn uống" }
-        .sumOf { it.amount }
-
-    val foodBudget = 1_500_000.0
+    val recentTransactions = uiState.transactions.take(3)
+    val topCategory = uiState.categoryStats.maxByOrNull { it.value }
 
     Scaffold(
+        modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddTransactionClick,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = CircleShape
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Thêm giao dịch")
-            }
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(text = "Aries")
+                        Text(
+                            text = "Quản lý ngân sách",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            )
         },
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    selected = true,
-                    onClick = {},
-                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                    label = { Text("Trang chủ") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { onBottomNavClick(Screen.Transactions.route) },
-                    icon = { Icon(Icons.Default.AccountBalanceWallet, contentDescription = null) },
-                    label = { Text("Giao dịch") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { onBottomNavClick(Screen.Statistics.route) },
-                    icon = { Icon(Icons.Default.BarChart, contentDescription = null) },
-                    label = { Text("Thống kê") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { onBottomNavClick(Screen.Settings.route) },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                    label = { Text("Cài đặt") }
-                )
+        floatingActionButton = {
+            FloatingActionButton(onClick = onAddTransactionClick) {
+                Text(text = "+")
             }
         }
-    ) { padding ->
-
-        LazyColumn(
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            item {
-                Text("Aries", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                Text("Quản lý ngân sách")
+            BalanceCard(
+                balance = uiState.balance,
+                totalIncome = uiState.totalIncome,
+                totalExpense = uiState.totalExpense
+            )
 
-                Spacer(modifier = Modifier.height(20.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                StatCard(
+                    title = "Chi tháng này",
+                    value = formatMoney(uiState.totalExpense),
+                    modifier = Modifier.weight(1f)
+                )
+                StatCard(
+                    title = "Giao dịch",
+                    value = uiState.totalTransactions.toString(),
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text("Số dư hiện tại", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                        Text("${formatMoney(balance)} ₫", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            if (topCategory != null) {
+                StatCard(
+                    title = "Danh mục chi nhiều nhất",
+                    value = "${topCategory.key} - ${formatMoney(topCategory.value)}"
+                )
+            }
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text("Thu nhập", fontWeight = FontWeight.Normal, color = MaterialTheme.colorScheme.onSurface)
-                                Text("+${formatMoney(income)} ₫", color = MaterialTheme.colorScheme.onSecondary, fontWeight = FontWeight.Bold)
-                            }
-
-                            Column {
-                                Text("Chi tiêu", fontWeight = FontWeight.Normal, color = MaterialTheme.colorScheme.onSurface)
-                                Text("-${formatMoney(expense)} ₫", color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Card(
-                        modifier = Modifier.weight(1f).padding(end = 8.dp),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Chi tháng này")
-                            Text("${formatMoney(expense)} ₫", color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    Card(
-                        modifier = Modifier.weight(1f).padding(start = 8.dp),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Giao dịch")
-                            Text("${transactions.size}", fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Danh mục chi nhiều nhất")
-                        Text(
-                            text = if (topExpenseEntry != null) "$topExpenseCategory - ${formatMoney(topExpenseAmount)} ₫" else topExpenseCategory,
-                            color = MaterialTheme.colorScheme.tertiary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text("Ngân sách", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("Ăn uống", fontWeight = FontWeight.Bold)
-                            Text("${formatMoney(foodExpense)} / ${formatMoney(foodBudget)} ₫")
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        LinearProgressIndicator(
-                            progress = {
-                                (foodExpense / foodBudget).toFloat().coerceIn(0f, 1f)
-                            },
-                            modifier = Modifier.fillMaxWidth().height(8.dp),
-                            color = MaterialTheme.colorScheme.tertiary,
-                            trackColor = MaterialTheme.colorScheme.tertiaryContainer
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text("Tiến độ ngân sách hàng tháng")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Giao dịch gần đây", fontWeight = FontWeight.Bold)
-                    TextButton(onClick = onViewAllTransactionsClick) {
-                        Text("Xem tất cả", fontWeight = FontWeight.Bold)
-                    }
+            if (uiState.budgets.isNotEmpty()) {
+                SectionTitle(text = "Ngân sách")
+                uiState.budgets.take(2).forEach { budget ->
+                    BudgetProgressCard(
+                        category = budget.category,
+                        spent = uiState.expenseByCategory[budget.category] ?: 0.0,
+                        limit = budget.limitAmount
+                    )
                 }
             }
 
-            items(transactions.take(3)) { item ->
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text(item.title, fontWeight = FontWeight.Bold)
-                            Text("${item.category} • ${item.date}")
-                        }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                SectionTitle(text = "Giao dịch gần đây")
+                TextButton(onClick = onViewAllTransactionsClick) {
+                    Text(text = "Xem tất cả")
+                }
+            }
 
-                        Text(
-                            text = if (item.type == TransactionType.INCOME)
-                                "+${formatMoney(item.amount)} ₫"
-                            else
-                                "-${formatMoney(item.amount)} ₫",
-                            color = if (item.type == TransactionType.INCOME)
-                                MaterialTheme.colorScheme.onSecondary
-                            else
-                                MaterialTheme.colorScheme.secondary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+            if (recentTransactions.isEmpty()) {
+                EmptyState(
+                    title = "Chưa có giao dịch",
+                    message = "Thêm giao dịch đầu tiên để theo dõi ngân sách."
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(onClick = onAddTransactionClick) {
+                    Text(text = "Thêm giao dịch")
+                }
+            } else {
+                recentTransactions.forEach { transaction ->
+                    TransactionItem(
+                        transaction = transaction,
+                        onClick = onViewAllTransactionsClick,
+                        onDeleteClick = { },
+                        showDeleteAction = false
+                    )
                 }
             }
         }
     }
 }
 
-private fun formatMoney(value: Double): String {
-    return "%,.0f".format(value).replace(",", ".")
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        color = MaterialTheme.colorScheme.onBackground,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold
+    )
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenPreview() {
+    Project_BudgetTheme {
+        HomeScreen(
+            uiState = previewUiState,
+            onAddTransactionClick = {},
+            onViewAllTransactionsClick = {}
+        )
+    }
+}
+
+private val previewUiState = BudgetUiState(
+    transactions = listOf(
+        Transaction(
+            id = 1,
+            title = "Lương tháng",
+            amount = 8_000_000.0,
+            category = "Lương",
+            type = TransactionType.INCOME,
+            date = "2026-05-01"
+        ),
+        Transaction(
+            id = 2,
+            title = "Ăn trưa",
+            amount = 55_000.0,
+            category = "Ăn uống",
+            type = TransactionType.EXPENSE,
+            date = "2026-05-02"
+        )
+    ),
+    totalTransactions = 2,
+    totalIncome = 8_000_000.0,
+    totalExpense = 55_000.0,
+    balance = 7_945_000.0,
+    categoryStats = mapOf("Ăn uống" to 55_000.0),
+    expenseByCategory = mapOf("Ăn uống" to 55_000.0)
+)
