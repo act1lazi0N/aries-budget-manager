@@ -13,6 +13,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate")
         enableEdgeToEdge()
+
         setContent {
             Project_BudgetTheme {
                 AppNavHost()
