@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.project_budget.data.TransactionRepository
 import com.example.project_budget.data.TransactionTemp
 import com.example.project_budget.data.local.AppDatabase
+import com.example.project_budget.data.remote.FirebaseTransactionDataSource
 import com.example.project_budget.data.repository.CurrencyRepository
 import com.example.project_budget.model.Budget
 import com.example.project_budget.model.DEFAULT_CURRENCY
@@ -22,7 +23,8 @@ class BudgetViewModel(
     application: Application
 ) : AndroidViewModel(application) {
     private val repository = TransactionRepository(
-        transactionDao = AppDatabase.getInstance(application).transactionDao()
+        transactionDao = AppDatabase.getInstance(application).transactionDao(),
+        firebaseTransactionDataSource = FirebaseTransactionDataSource.createOrNull(application)
     )
     private val currencyRepository = CurrencyRepository()
     private val _uiState = MutableStateFlow(
@@ -36,6 +38,7 @@ class BudgetViewModel(
 
     init {
         refreshState()
+        pullFirestoreTransactions()
         loadSupportedCurrencies()
     }
 
@@ -225,6 +228,16 @@ class BudgetViewModel(
     private fun refreshState(successMessage: String? = null) {
         viewModelScope.launch {
             _uiState.value = createUiState(successMessage = successMessage)
+        }
+    }
+
+    private fun pullFirestoreTransactions() {
+        viewModelScope.launch {
+            val synced = repository.pullFirestoreTransactionsIntoRoom()
+            repository.pushLocalTransactionsToFirestore()
+            if (synced) {
+                _uiState.value = createUiState()
+            }
         }
     }
 

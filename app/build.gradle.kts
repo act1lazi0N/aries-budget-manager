@@ -63,4 +63,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation(platform("com.google.firebase:firebase-bom:34.13.0"))
     implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
 }

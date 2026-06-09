@@ -197,13 +197,13 @@ Keep the Firebase BoM and add Firestore to `app/build.gradle.kts`:
 ```kotlin
 implementation(platform("com.google.firebase:firebase-bom:34.13.0"))
 implementation("com.google.firebase:firebase-analytics")
-implementation("com.google.firebase:firebase-firestore-ktx")
+implementation("com.google.firebase:firebase-firestore")
 ```
 
 If Auth is enabled, also add:
 
 ```kotlin
-implementation("com.google.firebase:firebase-auth-ktx")
+implementation("com.google.firebase:firebase-auth")
 ```
 
 ### 3. Use this Firestore structure
