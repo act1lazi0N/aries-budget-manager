@@ -3,14 +3,17 @@ package com.example.project_budget.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.project_budget.data.TransactionTemp
 import com.example.project_budget.data.TransactionRepository
+import com.example.project_budget.data.TransactionTemp
 import com.example.project_budget.data.local.AppDatabase
+import com.example.project_budget.data.remote.FirebaseTransactionDataSource
 import com.example.project_budget.data.repository.CurrencyRepository
 import com.example.project_budget.model.Budget
 import com.example.project_budget.model.DEFAULT_CURRENCY
 import com.example.project_budget.model.Transaction
 import com.example.project_budget.model.TransactionType
+import java.text.SimpleDateFormat
+import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +23,8 @@ class BudgetViewModel(
     application: Application
 ) : AndroidViewModel(application) {
     private val repository = TransactionRepository(
-        transactionDao = AppDatabase.getInstance(application).transactionDao()
+        transactionDao = AppDatabase.getInstance(application).transactionDao(),
+        firebaseTransactionDataSource = FirebaseTransactionDataSource.createOrNull(application)
     )
     private val currencyRepository = CurrencyRepository()
     private val _uiState = MutableStateFlow(
@@ -34,13 +38,14 @@ class BudgetViewModel(
 
     init {
         refreshState()
+        pullFirestoreTransactions()
         loadSupportedCurrencies()
     }
 
     fun addTransaction(transaction: Transaction) {
         viewModelScope.launch {
             repository.addTransaction(transaction)
-            _uiState.value = createUiState(message = "Đã thêm giao dịch.")
+            _uiState.value = createUiState(successMessage = "Đã thêm giao dịch.")
         }
     }
 
@@ -48,11 +53,8 @@ class BudgetViewModel(
         viewModelScope.launch {
             val updated = repository.updateTransaction(transaction)
             _uiState.value = createUiState(
-                message = if (updated) {
-                    "Đã cập nhật giao dịch."
-                } else {
-                    "Không tìm thấy giao dịch cần cập nhật."
-                }
+                successMessage = if (updated) "Đã cập nhật giao dịch." else null,
+                errorMessage = if (updated) null else "Không tìm thấy giao dịch cần cập nhật."
             )
         }
     }
@@ -63,7 +65,7 @@ class BudgetViewModel(
     ) {
         saveTransactionWithCurrencyConversion(
             transaction = transaction,
-            successMessage = "Da them giao dich.",
+            successMessage = "Đã thêm giao dịch.",
             onSuccess = onSuccess,
             save = repository::addTransaction
         )
@@ -75,11 +77,11 @@ class BudgetViewModel(
     ) {
         saveTransactionWithCurrencyConversion(
             transaction = transaction,
-            successMessage = "Da cap nhat giao dich.",
+            successMessage = "Đã cập nhật giao dịch.",
             onSuccess = onSuccess,
             save = { updatedTransaction ->
                 if (!repository.updateTransaction(updatedTransaction)) {
-                    error("Khong tim thay giao dich can cap nhat.")
+                    error("Không tìm thấy giao dịch cần cập nhật.")
                 }
                 updatedTransaction
             }
@@ -90,11 +92,8 @@ class BudgetViewModel(
         viewModelScope.launch {
             val deleted = repository.deleteTransaction(transactionId)
             _uiState.value = createUiState(
-                message = if (deleted) {
-                    "Đã xóa giao dịch."
-                } else {
-                    "Không tìm thấy giao dịch cần xóa."
-                }
+                successMessage = if (deleted) "Đã xóa giao dịch." else null,
+                errorMessage = if (deleted) null else "Không tìm thấy giao dịch cần xóa."
             )
         }
     }
@@ -108,7 +107,7 @@ class BudgetViewModel(
                 }
 
             _uiState.value = createUiState(
-                message = "Đã nhập ${importedTransactions.size} giao dịch."
+                successMessage = "Đã nhập ${importedTransactions.size} giao dịch."
             )
         }
     }
@@ -146,7 +145,10 @@ class BudgetViewModel(
     }
 
     fun clearMessage() {
-        _uiState.value = _uiState.value.copy(errorMessage = null)
+        _uiState.value = _uiState.value.copy(
+            successMessage = null,
+            errorMessage = null
+        )
     }
 
     private fun loadSupportedCurrencies() {
@@ -178,6 +180,7 @@ class BudgetViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isSavingTransaction = true,
+                successMessage = null,
                 errorMessage = null
             )
 
@@ -186,14 +189,14 @@ class BudgetViewModel(
                 save(convertedTransaction)
             }.fold(
                 onSuccess = {
-                    _uiState.value = createUiState(message = successMessage)
+                    _uiState.value = createUiState(successMessage = successMessage)
                     onSuccess()
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
                         isSavingTransaction = false,
                         errorMessage = error.message
-                            ?: "Khong the lay ty gia. Vui long thu lai."
+                            ?: "Không thể lấy tỷ giá. Vui lòng thử lại."
                     )
                 }
             )
@@ -206,7 +209,7 @@ class BudgetViewModel(
         val supportedCurrencies = _uiState.value.supportedCurrencies
 
         if (baseCurrency !in supportedCurrencies || targetCurrency !in supportedCurrencies) {
-            error("Loai tien nay hien chua duoc ho tro.")
+            error("Loại tiền này hiện chưa được hỗ trợ.")
         }
 
         val rate = currencyRepository.getRate(
@@ -222,13 +225,26 @@ class BudgetViewModel(
         )
     }
 
-    private fun refreshState(message: String? = null) {
+    private fun refreshState(successMessage: String? = null) {
         viewModelScope.launch {
-            _uiState.value = createUiState(message)
+            _uiState.value = createUiState(successMessage = successMessage)
         }
     }
 
-    private suspend fun createUiState(message: String? = null): BudgetUiState {
+    private fun pullFirestoreTransactions() {
+        viewModelScope.launch {
+            val synced = repository.pullFirestoreTransactionsIntoRoom()
+            repository.pushLocalTransactionsToFirestore()
+            if (synced) {
+                _uiState.value = createUiState()
+            }
+        }
+    }
+
+    private suspend fun createUiState(
+        successMessage: String? = null,
+        errorMessage: String? = null
+    ): BudgetUiState {
         val transactions = repository.getAllTransactions()
         val totalIncome = transactions
             .filter { it.type == TransactionType.INCOME }
@@ -265,9 +281,11 @@ class BudgetViewModel(
             categoryStats = expenseByCategory,
             expenseByCategory = expenseByCategory,
             categoryPercentages = categoryPercentages,
+            expenseTrend = buildExpenseTrend(transactions),
             overBudgetCategories = overBudgetCategories,
             overBudgetWarnings = buildOverBudgetWarnings(expenseByCategory, budgets),
-            errorMessage = message
+            successMessage = successMessage,
+            errorMessage = errorMessage
         )
     }
 
@@ -306,6 +324,25 @@ class BudgetViewModel(
                 null
             }
         }
+    }
+
+    private fun buildExpenseTrend(transactions: List<Transaction>): List<LineChartPoint> {
+        val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+        return transactions
+            .filter { it.type == TransactionType.EXPENSE }
+            .groupBy { transaction -> transaction.date.ifBlank { "Không ngày" } }
+            .map { (date, transactionsByDate) ->
+                LineChartPoint(
+                    label = date,
+                    amount = transactionsByDate.sumOf { it.convertedAmount }
+                )
+            }
+            .sortedBy { point ->
+                runCatching {
+                    dateFormatter.parse(point.label)?.time
+                }.getOrNull() ?: Long.MAX_VALUE
+            }
     }
 
     private fun TransactionTemp.toTransaction(): Transaction {
