@@ -1,17 +1,19 @@
 package com.example.project_budget.ui.screen.transaction
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,10 +47,34 @@ fun TransactionListScreen(
     modifier: Modifier = Modifier
 ) {
     var selectedFilter by remember { mutableStateOf(TransactionFilter.ALL) }
+    var pendingDeleteTransaction by remember { mutableStateOf<Transaction?>(null) }
     val visibleTransactions = when (selectedFilter) {
         TransactionFilter.ALL -> uiState.transactions
         TransactionFilter.INCOME -> uiState.transactions.filter { it.type == TransactionType.INCOME }
         TransactionFilter.EXPENSE -> uiState.transactions.filter { it.type == TransactionType.EXPENSE }
+    }
+
+    pendingDeleteTransaction?.let { transaction ->
+        AlertDialog(
+            onDismissRequest = { pendingDeleteTransaction = null },
+            title = { Text(text = "Xóa giao dịch?") },
+            text = { Text(text = "Bạn có chắc muốn xóa \"${transaction.title}\" không?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeleteClick(transaction.id)
+                        pendingDeleteTransaction = null
+                    }
+                ) {
+                    Text(text = "Xóa", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDeleteTransaction = null }) {
+                    Text(text = "Hủy")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -65,43 +91,49 @@ fun TransactionListScreen(
             }
         }
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(innerPadding),
+            contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                CategoryChip(
-                    text = "Tất cả",
-                    selected = selectedFilter == TransactionFilter.ALL,
-                    onClick = { selectedFilter = TransactionFilter.ALL }
-                )
-                CategoryChip(
-                    text = "Thu",
-                    selected = selectedFilter == TransactionFilter.INCOME,
-                    onClick = { selectedFilter = TransactionFilter.INCOME }
-                )
-                CategoryChip(
-                    text = "Chi",
-                    selected = selectedFilter == TransactionFilter.EXPENSE,
-                    onClick = { selectedFilter = TransactionFilter.EXPENSE }
-                )
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CategoryChip(
+                        text = "Tất cả",
+                        selected = selectedFilter == TransactionFilter.ALL,
+                        onClick = { selectedFilter = TransactionFilter.ALL }
+                    )
+                    CategoryChip(
+                        text = "Thu",
+                        selected = selectedFilter == TransactionFilter.INCOME,
+                        onClick = { selectedFilter = TransactionFilter.INCOME }
+                    )
+                    CategoryChip(
+                        text = "Chi",
+                        selected = selectedFilter == TransactionFilter.EXPENSE,
+                        onClick = { selectedFilter = TransactionFilter.EXPENSE }
+                    )
+                }
             }
 
             if (visibleTransactions.isEmpty()) {
-                EmptyState(
-                    title = "Không có giao dịch",
-                    message = "Thay đổi bộ lọc hoặc thêm giao dịch mới."
-                )
+                item {
+                    EmptyState(
+                        title = "Không có giao dịch",
+                        message = "Thay đổi bộ lọc hoặc thêm giao dịch mới."
+                    )
+                }
             } else {
-                visibleTransactions.forEach { transaction ->
+                items(
+                    items = visibleTransactions,
+                    key = { transaction -> transaction.id }
+                ) { transaction ->
                     TransactionItem(
                         transaction = transaction,
                         onClick = { onTransactionClick(transaction.id) },
-                        onDeleteClick = { onDeleteClick(transaction.id) }
+                        onDeleteClick = { pendingDeleteTransaction = transaction }
                     )
                 }
             }
