@@ -47,6 +47,7 @@ private val LightColorScheme = lightColorScheme(
     error = AriesError,
     onError = AriesSurface
 )
+
 @Composable
 fun Project_BudgetTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -55,7 +56,7 @@ fun Project_BudgetTheme(
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
-        colorScheme = LightColorScheme,
+        colorScheme = colorScheme,
         typography = Typography,
         content = content
     )
