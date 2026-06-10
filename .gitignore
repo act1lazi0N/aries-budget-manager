@@ -49,7 +49,7 @@ local.properties
 # AI assistant local files
 .codex/
 .cursor/
-.ai/
+.ai
 
 # Project-local agent instructions
 AGENTS.md
