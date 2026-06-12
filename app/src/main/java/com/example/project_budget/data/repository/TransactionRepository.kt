@@ -1,5 +1,6 @@
-package com.example.project_budget.data
+package com.example.project_budget.data.repository
 
+import com.example.project_budget.data.SampleData
 import com.example.project_budget.data.local.TransactionDao
 import com.example.project_budget.data.local.toEntity
 import com.example.project_budget.data.local.toModel

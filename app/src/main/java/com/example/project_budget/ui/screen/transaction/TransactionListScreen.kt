@@ -1,7 +1,7 @@
 package com.example.project_budget.ui.screen.transaction
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -117,30 +117,31 @@ fun TransactionListScreen(
             }
         }
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(innerPadding),
+            contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                CategoryChip(
-                    text = "Tất cả",
-                    selected = selectedFilter == TransactionFilter.ALL,
-                    onClick = { selectedFilter = TransactionFilter.ALL }
-                )
-                CategoryChip(
-                    text = "Thu",
-                    selected = selectedFilter == TransactionFilter.INCOME,
-                    onClick = { selectedFilter = TransactionFilter.INCOME }
-                )
-                CategoryChip(
-                    text = "Chi",
-                    selected = selectedFilter == TransactionFilter.EXPENSE,
-                    onClick = { selectedFilter = TransactionFilter.EXPENSE }
-                )
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CategoryChip(
+                        text = "Tất cả",
+                        selected = selectedFilter == TransactionFilter.ALL,
+                        onClick = { selectedFilter = TransactionFilter.ALL }
+                    )
+                    CategoryChip(
+                        text = "Thu",
+                        selected = selectedFilter == TransactionFilter.INCOME,
+                        onClick = { selectedFilter = TransactionFilter.INCOME }
+                    )
+                    CategoryChip(
+                        text = "Chi",
+                        selected = selectedFilter == TransactionFilter.EXPENSE,
+                        onClick = { selectedFilter = TransactionFilter.EXPENSE }
+                    )
+                }
             }
 
             if (visibleTransactions.isEmpty()) {
@@ -151,7 +152,10 @@ fun TransactionListScreen(
                     onActionClick = onHomeClick
                 )
             } else {
-                visibleTransactions.forEach { transaction ->
+                items(
+                    items = visibleTransactions,
+                    key = { transaction -> transaction.id }
+                ) { transaction ->
                     TransactionItem(
                         transaction = transaction,
                         onClick = { onTransactionClick(transaction.id) },
