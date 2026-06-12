@@ -2,8 +2,11 @@ package com.example.project_budget.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,6 +19,8 @@ import androidx.compose.ui.unit.dp
 fun EmptyState(
     title: String,
     message: String,
+    actionText: String? = null,
+    onActionClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -36,5 +41,11 @@ fun EmptyState(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium
         )
+        if (actionText != null && onActionClick != null) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onActionClick) {
+                Text(text = actionText)
+            }
+        }
     }
 }

@@ -5,13 +5,20 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -19,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,6 +38,7 @@ import com.example.project_budget.ui.components.EmptyState
 import com.example.project_budget.ui.components.TransactionItem
 import com.example.project_budget.ui.theme.Project_BudgetTheme
 import com.example.project_budget.viewmodel.BudgetUiState
+import kotlinx.coroutines.launch
 
 private enum class TransactionFilter {
     ALL,
@@ -44,33 +53,39 @@ fun TransactionListScreen(
     onAddTransactionClick: () -> Unit,
     onTransactionClick: (Int) -> Unit,
     onDeleteClick: (Int) -> Unit,
+    onHomeClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var selectedFilter by remember { mutableStateOf(TransactionFilter.ALL) }
-    var pendingDeleteTransaction by remember { mutableStateOf<Transaction?>(null) }
+    var transactionPendingDelete by remember { mutableStateOf<Transaction?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
     val visibleTransactions = when (selectedFilter) {
         TransactionFilter.ALL -> uiState.transactions
         TransactionFilter.INCOME -> uiState.transactions.filter { it.type == TransactionType.INCOME }
         TransactionFilter.EXPENSE -> uiState.transactions.filter { it.type == TransactionType.EXPENSE }
     }
 
-    pendingDeleteTransaction?.let { transaction ->
+    transactionPendingDelete?.let { transaction ->
         AlertDialog(
-            onDismissRequest = { pendingDeleteTransaction = null },
+            onDismissRequest = { transactionPendingDelete = null },
             title = { Text(text = "Xóa giao dịch?") },
             text = { Text(text = "Bạn có chắc muốn xóa \"${transaction.title}\" không?") },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         onDeleteClick(transaction.id)
-                        pendingDeleteTransaction = null
+                        transactionPendingDelete = null
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Đã xóa giao dịch")
+                        }
                     }
                 ) {
-                    Text(text = "Xóa", color = MaterialTheme.colorScheme.error)
+                    Text(text = "Xóa")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { pendingDeleteTransaction = null }) {
+                TextButton(onClick = { transactionPendingDelete = null }) {
                     Text(text = "Hủy")
                 }
             }
@@ -80,9 +95,20 @@ fun TransactionListScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         topBar = {
             TopAppBar(
-                title = { Text(text = "Giao dịch") }
+                title = { Text(text = "Giao dịch") },
+                actions = {
+                    IconButton(onClick = onHomeClick) {
+                        Icon(
+                            imageVector = Icons.Filled.Home,
+                            contentDescription = "Về trang chủ"
+                        )
+                    }
+                }
             )
         },
         floatingActionButton = {
@@ -119,12 +145,12 @@ fun TransactionListScreen(
             }
 
             if (visibleTransactions.isEmpty()) {
-                item {
-                    EmptyState(
-                        title = "Không có giao dịch",
-                        message = "Thay đổi bộ lọc hoặc thêm giao dịch mới."
-                    )
-                }
+                EmptyState(
+                    title = "Không có giao dịch",
+                    message = "Thay đổi bộ lọc hoặc thêm giao dịch mới.",
+                    actionText = "Về trang chủ",
+                    onActionClick = onHomeClick
+                )
             } else {
                 items(
                     items = visibleTransactions,
@@ -133,7 +159,7 @@ fun TransactionListScreen(
                     TransactionItem(
                         transaction = transaction,
                         onClick = { onTransactionClick(transaction.id) },
-                        onDeleteClick = { pendingDeleteTransaction = transaction }
+                        onDeleteClick = { transactionPendingDelete = transaction }
                     )
                 }
             }
@@ -168,7 +194,8 @@ private fun TransactionListScreenPreview() {
             ),
             onAddTransactionClick = {},
             onTransactionClick = {},
-            onDeleteClick = {}
+            onDeleteClick = {},
+            onHomeClick = {}
         )
     }
 }

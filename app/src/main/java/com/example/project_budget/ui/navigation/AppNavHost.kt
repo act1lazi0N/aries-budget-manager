@@ -23,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.project_budget.ui.components.AppBottomBar
 import com.example.project_budget.ui.screen.about.AboutScreen
 import com.example.project_budget.ui.screen.home.HomeScreen
@@ -51,13 +52,7 @@ fun AppNavHost(
                 AppBottomBar(
                     currentRoute = currentRoute,
                     onNavigate = { screen ->
-                        navController.navigate(screen.route) {
-                            popUpTo(Screen.Home.route) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        navController.navigateToTopLevel(screen)
                     }
                 )
             }
@@ -92,7 +87,10 @@ fun AppNavHost(
                     onTransactionClick = { transactionId ->
                         navController.navigate(Screen.editRoute(transactionId))
                     },
-                    onDeleteClick = viewModel::deleteTransaction
+                    onDeleteClick = viewModel::deleteTransaction,
+                    onHomeClick = {
+                        navController.navigateToTopLevel(Screen.Home)
+                    }
                 )
             }
 
@@ -179,6 +177,16 @@ private fun NavHostController.navigateBackToHome() {
     navigate(Screen.Home.route) {
         popUpTo(Screen.Home.route)
         launchSingleTop = true
+    }
+}
+
+private fun NavHostController.navigateToTopLevel(screen: Screen) {
+    navigate(screen.route) {
+        popUpTo(graph.findStartDestination().id) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
     }
 }
 
