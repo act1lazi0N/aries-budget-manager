@@ -3,7 +3,7 @@ package com.example.project_budget.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.project_budget.data.TransactionRepository
+import com.example.project_budget.data.repository.TransactionRepository
 import com.example.project_budget.data.TransactionTemp
 import com.example.project_budget.data.local.AppDatabase
 import com.example.project_budget.data.remote.FirebaseTransactionDataSource

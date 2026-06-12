@@ -39,6 +39,7 @@ import com.example.project_budget.viewmodel.BudgetUiState
 fun HomeScreen(
     uiState: BudgetUiState,
     onAddTransactionClick: () -> Unit,
+    onTransactionClick: (Int) -> Unit,
     onViewAllTransactionsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -139,7 +140,7 @@ fun HomeScreen(
                 recentTransactions.forEach { transaction ->
                     TransactionItem(
                         transaction = transaction,
-                        onClick = onViewAllTransactionsClick,
+                        onClick = { onTransactionClick(transaction.id) },
                         onDeleteClick = { },
                         showDeleteAction = false
                     )
@@ -166,6 +167,7 @@ private fun HomeScreenPreview() {
         HomeScreen(
             uiState = previewUiState,
             onAddTransactionClick = {},
+            onTransactionClick = {},
             onViewAllTransactionsClick = {}
         )
     }
