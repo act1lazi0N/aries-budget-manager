@@ -39,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,30 +73,33 @@ fun AddEditTransactionScreen(
     val defaultWalletId = wallets.firstOrNull()?.id ?: 1
     val dateFormatter = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
 
-    var title by remember(transaction?.id) { mutableStateOf(transaction?.title.orEmpty()) }
-    var amount by remember(transaction?.id) {
+    var title by rememberSaveable(transaction?.id) { mutableStateOf(transaction?.title.orEmpty()) }
+    var amount by rememberSaveable(transaction?.id) {
         mutableStateOf(transaction?.amount?.takeIf { it > 0.0 }?.toPlainText().orEmpty())
     }
-    var currency by remember(transaction?.id) { mutableStateOf(transaction?.currency ?: defaultCurrency) }
-    var type by remember(transaction?.id) { mutableStateOf(transaction?.type ?: TransactionType.EXPENSE) }
-    var category by remember(transaction?.id) { mutableStateOf(transaction?.category.orEmpty()) }
-    var walletId by remember(transaction?.id) { mutableStateOf(transaction?.walletId ?: defaultWalletId) }
-    var date by remember(transaction?.id) {
+    var currency by rememberSaveable(transaction?.id) { mutableStateOf(transaction?.currency ?: defaultCurrency) }
+    var typeName by rememberSaveable(transaction?.id) {
+        mutableStateOf((transaction?.type ?: TransactionType.EXPENSE).name)
+    }
+    val type = runCatching { TransactionType.valueOf(typeName) }.getOrDefault(TransactionType.EXPENSE)
+    var category by rememberSaveable(transaction?.id) { mutableStateOf(transaction?.category.orEmpty()) }
+    var walletId by rememberSaveable(transaction?.id) { mutableStateOf(transaction?.walletId ?: defaultWalletId) }
+    var date by rememberSaveable(transaction?.id) {
         mutableStateOf(transaction?.date?.takeIf { it.isNotBlank() } ?: dateFormatter.format(Date()))
     }
-    var note by remember(transaction?.id) { mutableStateOf(transaction?.note.orEmpty()) }
+    var note by rememberSaveable(transaction?.id) { mutableStateOf(transaction?.note.orEmpty()) }
 
-    var titleError by remember { mutableStateOf<String?>(null) }
-    var amountError by remember { mutableStateOf<String?>(null) }
-    var currencyError by remember { mutableStateOf<String?>(null) }
-    var categoryError by remember { mutableStateOf<String?>(null) }
-    var walletError by remember { mutableStateOf<String?>(null) }
-    var noteError by remember { mutableStateOf<String?>(null) }
+    var titleError by rememberSaveable { mutableStateOf<String?>(null) }
+    var amountError by rememberSaveable { mutableStateOf<String?>(null) }
+    var currencyError by rememberSaveable { mutableStateOf<String?>(null) }
+    var categoryError by rememberSaveable { mutableStateOf<String?>(null) }
+    var walletError by rememberSaveable { mutableStateOf<String?>(null) }
+    var noteError by rememberSaveable { mutableStateOf<String?>(null) }
 
-    var categoryExpanded by remember { mutableStateOf(false) }
-    var currencyExpanded by remember { mutableStateOf(false) }
-    var walletExpanded by remember { mutableStateOf(false) }
-    var showDatePicker by remember { mutableStateOf(false) }
+    var categoryExpanded by rememberSaveable { mutableStateOf(false) }
+    var currencyExpanded by rememberSaveable { mutableStateOf(false) }
+    var walletExpanded by rememberSaveable { mutableStateOf(false) }
+    var showDatePicker by rememberSaveable { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
     val categorySuggestions = categories
@@ -259,7 +263,7 @@ fun AddEditTransactionScreen(
                     RadioButton(
                         selected = type == TransactionType.EXPENSE,
                         onClick = {
-                            type = TransactionType.EXPENSE
+                            typeName = TransactionType.EXPENSE.name
                             category = ""
                             categoryError = null
                         }
@@ -270,7 +274,7 @@ fun AddEditTransactionScreen(
                     RadioButton(
                         selected = type == TransactionType.INCOME,
                         onClick = {
-                            type = TransactionType.INCOME
+                            typeName = TransactionType.INCOME.name
                             category = ""
                             categoryError = null
                         }
