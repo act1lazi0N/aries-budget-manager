@@ -378,7 +378,7 @@ private fun SectionTitle(text: String) {
     )
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 420, heightDp = 1500)
 @Composable
 private fun StatisticsScreenPreview() {
     Project_BudgetTheme {
