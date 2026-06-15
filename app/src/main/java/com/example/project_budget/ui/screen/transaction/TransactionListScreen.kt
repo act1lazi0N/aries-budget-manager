@@ -1,13 +1,15 @@
 package com.example.project_budget.ui.screen.transaction
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -33,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.project_budget.model.Transaction
 import com.example.project_budget.model.TransactionType
+import com.example.project_budget.model.Wallet
 import com.example.project_budget.ui.components.CategoryChip
 import com.example.project_budget.ui.components.EmptyState
 import com.example.project_budget.ui.components.TransactionItem
@@ -60,6 +63,7 @@ fun TransactionListScreen(
     var transactionPendingDelete by remember { mutableStateOf<Transaction?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val walletNamesById = uiState.wallets.associate { wallet -> wallet.id to wallet.name }
     val visibleTransactions = when (selectedFilter) {
         TransactionFilter.ALL -> uiState.transactions
         TransactionFilter.INCOME -> uiState.transactions.filter { it.type == TransactionType.INCOME }
@@ -113,49 +117,59 @@ fun TransactionListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddTransactionClick) {
-                Text(text = "+")
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "Thêm giao dịch"
+                )
             }
         }
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(innerPadding),
+            contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                CategoryChip(
-                    text = "Tất cả",
-                    selected = selectedFilter == TransactionFilter.ALL,
-                    onClick = { selectedFilter = TransactionFilter.ALL }
-                )
-                CategoryChip(
-                    text = "Thu",
-                    selected = selectedFilter == TransactionFilter.INCOME,
-                    onClick = { selectedFilter = TransactionFilter.INCOME }
-                )
-                CategoryChip(
-                    text = "Chi",
-                    selected = selectedFilter == TransactionFilter.EXPENSE,
-                    onClick = { selectedFilter = TransactionFilter.EXPENSE }
-                )
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CategoryChip(
+                        text = "Tất cả",
+                        selected = selectedFilter == TransactionFilter.ALL,
+                        onClick = { selectedFilter = TransactionFilter.ALL }
+                    )
+                    CategoryChip(
+                        text = "Thu",
+                        selected = selectedFilter == TransactionFilter.INCOME,
+                        onClick = { selectedFilter = TransactionFilter.INCOME }
+                    )
+                    CategoryChip(
+                        text = "Chi",
+                        selected = selectedFilter == TransactionFilter.EXPENSE,
+                        onClick = { selectedFilter = TransactionFilter.EXPENSE }
+                    )
+                }
             }
 
             if (visibleTransactions.isEmpty()) {
-                EmptyState(
-                    title = "Không có giao dịch",
-                    message = "Thay đổi bộ lọc hoặc thêm giao dịch mới.",
-                    actionText = "Về trang chủ",
-                    onActionClick = onHomeClick
-                )
+                item {
+                    EmptyState(
+                        title = "Không có giao dịch",
+                        message = "Thay đổi bộ lọc hoặc thêm giao dịch mới.",
+                        actionText = "Thêm giao dịch",
+                        onActionClick = onAddTransactionClick
+                    )
+                }
             } else {
-                visibleTransactions.forEach { transaction ->
+                items(visibleTransactions) { transaction ->
                     TransactionItem(
                         transaction = transaction,
                         onClick = { onTransactionClick(transaction.id) },
-                        onDeleteClick = { transactionPendingDelete = transaction }
+                        onDeleteClick = { transactionPendingDelete = transaction },
+                        walletName = walletNamesById[transaction.walletId]
                     )
                 }
             }
@@ -186,6 +200,9 @@ private fun TransactionListScreenPreview() {
                         type = TransactionType.EXPENSE,
                         date = "2026-05-02"
                     )
+                ),
+                wallets = listOf(
+                    Wallet(id = 1, name = "Tiền mặt", balance = 7_945_000.0)
                 )
             ),
             onAddTransactionClick = {},

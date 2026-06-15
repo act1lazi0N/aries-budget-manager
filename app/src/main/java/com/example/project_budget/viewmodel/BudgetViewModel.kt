@@ -212,6 +212,7 @@ class BudgetViewModel(
             error("Loại tiền này hiện chưa được hỗ trợ.")
         }
 
+        // Get the exchange rate
         val rate = currencyRepository.getRate(
             fromCurrency = baseCurrency,
             toCurrency = targetCurrency
@@ -219,7 +220,7 @@ class BudgetViewModel(
 
         return transaction.copy(
             currency = rate.base,
-            convertedAmount = transaction.amount * rate.rate,
+            convertedAmount = transaction.amount * rate.rate, // To multiple with the base currency
             convertedCurrency = rate.quote,
             exchangeRate = rate.rate
         )
