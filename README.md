@@ -191,7 +191,7 @@ Nguyên tắc:
 - [x] App build được.
 - [x] Có ít nhất 3 màn hình.
 - [x] Có Compose function.
-- [ ] Có LazyColumn hoặc LazyGrid.
+- [x] Có LazyColumn hoặc LazyGrid.
 - [x] Có MaterialTheme.
 - [x] Có Material Design 3.
 - [x] Có Navigation Compose.
