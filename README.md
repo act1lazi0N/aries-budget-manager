@@ -188,28 +188,28 @@ Nguyên tắc:
 
 ## Checklist nộp bài
 
-- [ ] App build được.
-- [ ] Có ít nhất 3 màn hình.
-- [ ] Có Compose function.
+- [x] App build được.
+- [x] Có ít nhất 3 màn hình.
+- [x] Có Compose function.
 - [ ] Có LazyColumn hoặc LazyGrid.
-- [ ] Có MaterialTheme.
-- [ ] Có Material Design 3.
-- [ ] Có Navigation Compose.
-- [ ] Back button hoạt động đúng.
-- [ ] Có MVVM.
-- [ ] ViewModel tách khỏi UI.
-- [ ] Có Repository giữa ViewModel và data source.
-- [ ] Có Room/local data.
-- [ ] Có Firebase config local bằng `app/google-services.json` nếu demo Firebase.
-- [ ] Xoay màn hình không mất dữ liệu.
-- [ ] Có CRUD: thêm, sửa, xóa.
-- [ ] Có About screen.
-- [ ] Có import/export CSV hoặc JSON.
-- [ ] Có thống kê tổng, trung bình, min/max và phân loại nhóm.
-- [ ] Có validation input.
-- [ ] Có Snackbar, AlertDialog hoặc TextField error.
-- [ ] Có Logcat lifecycle ít nhất 4 callback.
-- [ ] Có ảnh minh chứng Logcat.
+- [x] Có MaterialTheme.
+- [x] Có Material Design 3.
+- [x] Có Navigation Compose.
+- [x] Back button hoạt động đúng.
+- [x] Có MVVM.
+- [x] ViewModel tách khỏi UI.
+- [x] Có Repository giữa ViewModel và data source.
+- [x] Có Room/local data.
+- [x] Có Firebase config local bằng `app/google-services.json` nếu demo Firebase.
+- [x] Xoay màn hình không mất dữ liệu.
+- [x] Có CRUD: thêm, sửa, xóa.
+- [x] Có About screen.
+- [x] Có import/export CSV hoặc JSON.
+- [x] Có thống kê tổng, trung bình, min/max và phân loại nhóm.
+- [x] Có validation input.
+- [x] Có Snackbar, AlertDialog hoặc TextField error.
+- [x] Có Logcat lifecycle ít nhất 4 callback.
+- [x] Có ảnh minh chứng Logcat.
 
 ## Tên dự án
 

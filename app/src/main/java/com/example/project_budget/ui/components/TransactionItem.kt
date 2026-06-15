@@ -27,6 +27,7 @@ fun TransactionItem(
     onClick: () -> Unit,
     onDeleteClick: () -> Unit,
     showDeleteAction: Boolean = true,
+    walletName: String? = null,
     modifier: Modifier = Modifier
 ) {
     val amountPrefix = if (transaction.type == TransactionType.INCOME) "+" else "-"
@@ -35,6 +36,11 @@ fun TransactionItem(
     } else {
         MaterialTheme.colorScheme.error
     }
+    val metadata = buildList {
+        add(transaction.category)
+        walletName?.takeIf { it.isNotBlank() }?.let(::add)
+        transaction.date.takeIf { it.isNotBlank() }?.let(::add)
+    }.joinToString(" • ")
 
     Card(
         modifier = modifier
@@ -60,7 +66,7 @@ fun TransactionItem(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "${transaction.category} • ${transaction.date}",
+                        text = metadata,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -83,7 +89,7 @@ fun TransactionItem(
             if (transaction.currency != transaction.convertedCurrency) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${transaction.amount} ${transaction.currency} ~= ${formatMoney(transaction.convertedAmount)}",
+                    text = "${transaction.amount} ${transaction.currency} ≈ ${formatMoney(transaction.convertedAmount)}",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )

@@ -2,29 +2,32 @@ package com.example.project_budget.ui.screen.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.project_budget.model.Transaction
 import com.example.project_budget.model.TransactionType
+import com.example.project_budget.model.Wallet
 import com.example.project_budget.ui.components.BalanceCard
 import com.example.project_budget.ui.components.BudgetProgressCard
 import com.example.project_budget.ui.components.EmptyState
@@ -45,6 +48,7 @@ fun HomeScreen(
 ) {
     val recentTransactions = uiState.transactions.take(3)
     val topCategory = uiState.categoryStats.maxByOrNull { it.value }
+    val walletNamesById = uiState.wallets.associate { wallet -> wallet.id to wallet.name }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -65,50 +69,60 @@ fun HomeScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddTransactionClick) {
-                Text(text = "+")
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "Thêm giao dịch"
+                )
             }
         }
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(innerPadding),
+            contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            BalanceCard(
-                balance = uiState.balance,
-                totalIncome = uiState.totalIncome,
-                totalExpense = uiState.totalExpense
-            )
+            item {
+                BalanceCard(
+                    balance = uiState.balance,
+                    totalIncome = uiState.totalIncome,
+                    totalExpense = uiState.totalExpense
+                )
+            }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                StatCard(
-                    title = "Chi tháng này",
-                    value = formatMoney(uiState.totalExpense),
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    title = "Giao dịch",
-                    value = uiState.totalTransactions.toString(),
-                    modifier = Modifier.weight(1f)
-                )
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    StatCard(
+                        title = "Chi tháng này",
+                        value = formatMoney(uiState.totalExpense),
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatCard(
+                        title = "Giao dịch",
+                        value = uiState.totalTransactions.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
 
             if (topCategory != null) {
-                StatCard(
-                    title = "Danh mục chi nhiều nhất",
-                    value = "${topCategory.key} - ${formatMoney(topCategory.value)}"
-                )
+                item {
+                    StatCard(
+                        title = "Danh mục chi nhiều nhất",
+                        value = "${topCategory.key} - ${formatMoney(topCategory.value)}"
+                    )
+                }
             }
 
             if (uiState.budgets.isNotEmpty()) {
-                SectionTitle(text = "Ngân sách")
-                uiState.budgets.take(2).forEach { budget ->
+                item {
+                    SectionTitle(text = "Ngân sách")
+                }
+                items(uiState.budgets.take(2)) { budget ->
                     BudgetProgressCard(
                         category = budget.category,
                         spent = uiState.expenseByCategory[budget.category] ?: 0.0,
@@ -117,32 +131,36 @@ fun HomeScreen(
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                SectionTitle(text = "Giao dịch gần đây")
-                TextButton(onClick = onViewAllTransactionsClick) {
-                    Text(text = "Xem tất cả")
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SectionTitle(text = "Giao dịch gần đây")
+                    TextButton(onClick = onViewAllTransactionsClick) {
+                        Text(text = "Xem tất cả")
+                    }
                 }
             }
 
             if (recentTransactions.isEmpty()) {
-                EmptyState(
-                    title = "Chưa có giao dịch",
-                    message = "Thêm giao dịch đầu tiên để theo dõi ngân sách."
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(onClick = onAddTransactionClick) {
-                    Text(text = "Thêm giao dịch")
+                item {
+                    EmptyState(
+                        title = "Chưa có giao dịch",
+                        message = "Thêm giao dịch đầu tiên để theo dõi ngân sách.",
+                        actionText = "Thêm giao dịch",
+                        onActionClick = onAddTransactionClick
+                    )
                 }
             } else {
-                recentTransactions.forEach { transaction ->
+                items(recentTransactions) { transaction ->
                     TransactionItem(
                         transaction = transaction,
                         onClick = { onTransactionClick(transaction.id) },
                         onDeleteClick = { },
-                        showDeleteAction = false
+                        showDeleteAction = false,
+                        walletName = walletNamesById[transaction.walletId]
                     )
                 }
             }
@@ -191,6 +209,9 @@ private val previewUiState = BudgetUiState(
             type = TransactionType.EXPENSE,
             date = "2026-05-02"
         )
+    ),
+    wallets = listOf(
+        Wallet(id = 1, name = "Tiền mặt", balance = 7_945_000.0)
     ),
     totalTransactions = 2,
     totalIncome = 8_000_000.0,
